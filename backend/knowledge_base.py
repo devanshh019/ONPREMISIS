@@ -1,4 +1,4 @@
-# Local RAG Vector Knowledge Base with ChromaDB and Embeddings
+# Local RAG Vector Knowledge Base 
 import time
 from pathlib import Path
 from typing import Dict, List, Any, Optional
@@ -13,7 +13,6 @@ from langchain_core.documents import Document
 from .config import (
     CHROMA_DIR,
     SEED_DOCS_DIR,
-    KB_DOCS_DIR,
     RAG_CHUNK_SIZE,
     RAG_CHUNK_OVERLAP,
     RAG_DEFAULT_TOP_K,
@@ -50,11 +49,10 @@ class LocalRAGKnowledgeBase:
 
     @staticmethod
     def extract_text_from_file(file_path: Path or str) -> str:
-        """Robust multi-format text extractor for PDF, DOCX, DOC, TXT, CSV, MD files."""
         p = Path(file_path)
         ext = p.suffix.lower()
 
-        if ext in [".docx", ".doc"]:
+        if ext == ".docx":
             try:
                 doc = docx.Document(str(p))
                 paragraphs = [para.text.strip() for para in doc.paragraphs if para.text.strip()]
