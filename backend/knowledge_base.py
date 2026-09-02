@@ -79,7 +79,6 @@ class LocalRAGKnowledgeBase:
                 return f"[Text Read Error: {e}]"
 
     def ingest_file(self, file_path: str or Path, original_filename: str = None) -> Dict[str, Any]:
-        """Ingests and indexes PDF, DOCX, DOC, TXT, CSV, and Markdown files into local Chroma vector store."""
         p = Path(file_path)
         name = original_filename or p.name
         doc_id = f"DOC-{int(time.time() * 1000)}"
@@ -121,29 +120,6 @@ class LocalRAGKnowledgeBase:
             "doc_id": doc_id,
             "indexed_chunks": len(chunks),
             "document": {"doc_id": doc_id, "filename": name, "title": name},
-        }
-
-    def ingest_text(self, title: str, text: str, category: str = "STANDARDS") -> Dict[str, Any]:
-        doc_id = f"DOC-{int(time.time() * 1000)}"
-        doc = Document(page_content=text, metadata={"doc_id": doc_id, "title": title, "filename": title})
-        chunks = splitter.split_documents([doc])
-
-        # Deduplicate: remove any existing records with the same title
-        existing_data = vec_store.get(include=["metadatas"])
-        ids_to_del = [
-            id_val for id_val, m in zip(existing_data.get("ids", []), existing_data.get("metadatas", []))
-            if m and (m.get("title") == title or m.get("filename") == title)
-        ]
-        if ids_to_del:
-            vec_store.delete(ids=ids_to_del)
-
-        vec_store.add_documents(chunks)
-        return {
-            "success": True,
-            "filename": title,
-            "doc_id": doc_id,
-            "indexed_chunks": len(chunks),
-            "document": {"doc_id": doc_id, "title": title},
         }
 
     def search(self, query: str, top_k: int = RAG_DEFAULT_TOP_K) -> List[Dict[str, Any]]:
@@ -201,7 +177,7 @@ def _seed_db():
                 try:
                     knowledge_base.ingest_file(p, original_filename=p.name)
                 except Exception:
-                    pass
+                    print(f"[seed] Skipped '{p.name}': {e}")
 
 
 knowledge_base = LocalRAGKnowledgeBase()
