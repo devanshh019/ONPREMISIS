@@ -1,4 +1,4 @@
-# Local RAG Vector Knowledge Base 
+# Local RAG Knowledge Base 
 import time
 from pathlib import Path
 from typing import Dict, List, Any, Optional
@@ -44,7 +44,7 @@ vec_store = Chroma(
 )
 
 
-# Simple Knowledge Base Interface (< 100 lines)
+# Knowledge Base Interface 
 class LocalRAGKnowledgeBase:
 
     @staticmethod
@@ -104,7 +104,7 @@ class LocalRAGKnowledgeBase:
         if not chunks:
             raise ValueError(f"Document '{name}' contains no indexable text.")
 
-        # Deduplicate: remove any existing records with the same filename or title
+        # remove any existing records with the same filename or title
         existing_data = vec_store.get(include=["metadatas"])
         ids_to_del = [
             id_val for id_val, m in zip(existing_data.get("ids", []), existing_data.get("metadatas", []))
@@ -167,7 +167,7 @@ class LocalRAGKnowledgeBase:
         return {"total_documents": len(self.list_documents()), "total_chunks": len(ids)}
 
 
-# Ingest Seed Documents on Startup
+# Ingest Seed Documents
 def _seed_db():
     if SEED_DOCS_DIR.exists():
         existing_metas = vec_store.get(include=["metadatas"]).get("metadatas", [])
