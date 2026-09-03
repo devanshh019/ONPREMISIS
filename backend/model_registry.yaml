@@ -1,0 +1,23 @@
+models:
+- id: gemma3:4b
+  name: Gemma 3 4B Sovereign Foundation
+  default: true
+  capabilities:
+  - STANDARDS_AND_GOVERNANCE_REASONING
+  - ENTERPRISE_DELIVERABLE_SYNTHESIS
+  - MULTIMODAL_IMAGE_INSPECTION
+  - DOCUMENT_RAG_ANALYSIS
+  - GENERAL_ENGINEERING_REASONING
+  - ENGINEERING_MATH_AND_CODE
+
+- id: qwen2.5:0.5b
+  name: Qwen 2.5 0.5B Lightweight Coder
+  default: false
+  capabilities:
+  - LIGHTWEIGHT_CODE
+
+- id: qwen3:8b
+  name: Qwen 3 8B Math & Coding Specialist
+  default: false
+  capabilities:
+  - HEAVY_REASONING_MATH
