@@ -176,7 +176,7 @@ def _seed_db():
             if p.name not in existing_names:
                 try:
                     knowledge_base.ingest_file(p, original_filename=p.name)
-                except Exception:
+                except Exception as e:
                     print(f"[seed] Skipped '{p.name}': {e}")
 
 
