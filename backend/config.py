@@ -13,7 +13,7 @@ KB_DOCS_DIR = STORAGE_DIR / "kb_docs" #Store Files Added By User To Kb
 CHROMA_DIR = STORAGE_DIR / "chroma_db"  #Vec Store
 FRONTEND_DIST_DIR = PROJECT_ROOT / "frontend" / "dist" #Frontend Path
 ON_PREMISES_CACHE_DIR = STORAGE_DIR / "on_premises_cache"
-for dr in [DATA_DIR, SEED_DOCS_DIR, STORAGE_DIR, UPLOADS_DIR, KB_DOCS_DIR, CHROMA_DIR]:
+for dr in [DATA_DIR, SEED_DOCS_DIR, STORAGE_DIR, UPLOADS_DIR, KB_DOCS_DIR, CHROMA_DIR,ON_PREMISES_CACHE_DIR]:
     dr.mkdir(parents=True, exist_ok=True)
 
 
@@ -31,7 +31,7 @@ OLLAMA_HEALTH_TIMEOUT_SECONDS = 1.0 #health check timeout limit
 DEFAULT_MODEL_ID = "gemma3:4b"
 DEFAULT_MODEL_NAME = "GEMMA3 - 4B"
 MODEL_TEMPERATURE = 0.2 
-MODEL_TOP_P = 0.95 #Forces Ollama to use token with prob above 95%
+MODEL_TOP_P = 0.85 #Forces Ollama to use token with prob above 85%
 MODEL_CONTEXT_WINDOW = 4096
 MAX_HISTORY_TURNS = 10 #Last 10 Chat history Used for context of chat
 
