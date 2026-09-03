@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+:root {
+  --bg-main: #faf8f5;
+  --bg-sidebar: #f4efe6;
+  --bg-card: #ffffff;
+  --bg-elevated: #ede7dc;
+  --border-subtle: #e6dfd3;
+  --border-strong: #d3c9b8;
+  --text-primary: #1c1917;
+  --text-secondary: #57534e;
+  --text-muted: #78716c;
+  --accent-orange: #ea580c;
+  --accent-orange-light: #fff7ed;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #faf8f5;
+  color: #1c1917;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -0.01em;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  border: none;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6cebf;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b5aa94;
+}
+
+.shadow-clean {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.shadow-card {
+  box-shadow: 0 4px 12px -2px rgba(28, 25, 23, 0.06), 0 2px 6px -1px rgba(28, 25, 23, 0.04);
+}
+
+@keyframes slime-morph {
+  0% {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+    transform: rotate(0deg) scale(1);
+  }
+
+  33% {
+    border-radius: 70% 30% 46% 54% / 30% 29% 71% 70%;
+    transform: rotate(120deg) scale(1.08);
+  }
+
+  66% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+    transform: rotate(240deg) scale(0.94);
+  }
+
+  100% {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes slime-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px 2px rgba(234, 88, 12, 0.35);
+  }
+
+  50% {
+    box-shadow: 0 0 18px 5px rgba(249, 115, 22, 0.6);
+  }
+}
+
+.animate-slime {
+  animation: slime-morph 3s ease-in-out infinite, slime-glow 2s ease-in-out infinite;
+}
+
+.animate-slime-fast {
+  animation: slime-morph 1.8s ease-in-out infinite, slime-glow 1.5s ease-in-out infinite;
+}
