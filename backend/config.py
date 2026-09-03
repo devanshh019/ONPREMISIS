@@ -36,3 +36,8 @@ MODEL_TOP_P = 0.95 #Forces Ollama to use token with prob above 95%
 MODEL_CONTEXT_WINDOW = 4096
 MAX_HISTORY_TURNS = 10 #Last 10 Chat history Used for context of chat
 
+# RAG 
+RAG_CHUNK_SIZE = 1000
+RAG_CHUNK_OVERLAP = 200
+RAG_DEFAULT_TOP_K = 3
+CHROMA_COLLECTION_NAME = os.environ.get("CHROMA_COLLECTION_NAME", "ONPREMISIS_KB")  # Chroma Collection Name
