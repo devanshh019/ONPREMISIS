@@ -40,3 +40,11 @@ RAG_CHUNK_SIZE = 1000
 RAG_CHUNK_OVERLAP = 200
 RAG_DEFAULT_TOP_K = 3
 CHROMA_COLLECTION_NAME = os.environ.get("CHROMA_COLLECTION_NAME", "ONPREMISIS_KB")  # Chroma Collection Name
+
+#File Format
+MAX_REACT_ITERATIONS = int(os.environ.get("MAX_REACT_ITERATIONS", "3"))
+IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff")
+DOCUMENT_EXTENSIONS = (".pdf", ".docx",  ".txt", ".csv", ".xlsx", ".pptx", ".md")
+AUDIT_ROOT_SEED_PREFIX = os.environ.get("AUDIT_ROOT_SEED_PREFIX", f"{APP_NAME}_ROOT")
+ORGANIZATION_NAME = os.environ.get("ORGANIZATION_NAME", "ONPREMISIS")
+CONFIDENTIAL_TAG = os.environ.get("CONFIDENTIAL_TAG", "CONFIDENTIAL")
