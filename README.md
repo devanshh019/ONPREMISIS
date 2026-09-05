@@ -577,9 +577,12 @@ The architecture and feature set may change as the project evolves toward the fi
 
 ---
 
-## Team
+## Team Details
 
-**Project:** ONPREMISIS  
-**Focus:** Sovereign / On-Premise AI Workbench  
-**Context:** Smart India Hackathon 2026
+**Devansh Kumar Verma:** Backend & Agentic Ai  
+**Aarushi Kumari:** Backend & Generative Ai  
+**Shalvi Singh:** Research & Development
+**Udit Deep:** Network & Generative Ai
+**Pratham Raj:** Frontend
+**Tripti Kashyap:** Frontend
 
