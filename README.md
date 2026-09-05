@@ -35,14 +35,6 @@ The current codebase includes:
 
 The backend communicates with a locally running Ollama instance rather than calling a hosted LLM API.
 
-Default configuration:
-
-```text
-Ollama: http://127.0.0.1:11434
-Default model: gemma3:4b
-Application host: 127.0.0.1
-Application port: 8080
-```
 
 The inference layer supports:
 
@@ -87,9 +79,10 @@ The current registry contains:
 
 | Model | Purpose |
 |---|---|
-| `gemma3:4b` | Default general/engineering and multimodal foundation model |
-| `qwen2.5:0.5b` | Lightweight coding tasks |
-| `qwen3:8b` | Heavy reasoning and mathematics/coding |
+| `qwen3:8b` | General/Defaultl |
+| `qwen2.5-Coder-7b` | Heavy Coding and Maths |
+| `mistral:7b` | Enterprise level Deliverable |
+| `llava:7b` | Image and OCR Task |
 
 The registry is capability-based, allowing the router to select a model according to the detected task category.
 
@@ -263,6 +256,10 @@ ONPREMISIS/
 │   │   ├── hooks/
 │   │   └── utils/
 │   ├── public/
+│   ├── .gitignore
+│   ├── .oxlintrc.json
+│   ├── README.md
+│   ├── vite.config.js
 │   ├── package.json
 │   ├── package-lock.json
 │   └── vite.config.js
@@ -422,14 +419,15 @@ ollama list
 Pull the default model if it is not already installed:
 
 ```bash
-ollama pull gemma3:4b
+ollama pull qwen3:8b
 ```
 
 Optional models from the current registry:
 
 ```bash
-ollama pull qwen2.5:0.5b
-ollama pull qwen3:8b
+ollama pull qwen2.5
+ollama pull mistral:7b
+ollama pull llava:7b
 ```
 
 The exact model availability depends on the local Ollama installation and the model registry configuration.
@@ -495,31 +493,6 @@ and supports local file uploads through:
 
 ---
 
-## API Integration
-
-The frontend currently references API routes including:
-
-```text
-GET  /api/health
-GET  /api/scenarios
-GET  /api/models
-POST /api/models/select
-
-GET  /api/security/status
-GET  /api/security/certificate
-
-GET  /api/knowledge-base/documents
-POST /api/knowledge-base/upload
-POST /api/knowledge-base/search
-DELETE /api/knowledge-base/documents/{doc_id}
-
-POST /api/upload
-POST /api/agent/execute
-```
-
-These routes represent the frontend/backend contract used by the current UI. The repository snapshot should be treated as the source of truth for which backend route implementations are currently available.
-
----
 
 ## Security / Sovereign Design
 
@@ -594,41 +567,13 @@ Sovereign AI Workbench
 
 ---
 
-## Development
 
-Contributions should be made through feature branches rather than directly modifying the main branch.
-
-Example:
-
-```bash
-git checkout -b feature/your-feature
-git add .
-git commit -m "feat: describe your change"
-git push -u origin feature/your-feature
-```
-
-For documentation-only changes:
-
-```bash
-git checkout -b documentation/readme
-git add README.md
-git commit -m "docs: update README"
-git push -u origin documentation/readme
-```
-
----
 
 ## Project Status
 
 **Status:** Active development / prototype
 
 The architecture and feature set may change as the project evolves toward the final SIH implementation.
-
----
-
-## License
-
-No explicit license file is currently included in the repository. Add an appropriate `LICENSE` file before distributing the project publicly if required.
 
 ---
 
