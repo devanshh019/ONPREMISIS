@@ -192,4 +192,93 @@ class ToolRegistry:
             duration_ms=exec_res.duration_ms,
         )
 
+    def _generate_word_wrapper(self, title: str = "Technical Evaluation Note", sections: Optional[List[Any]] = None, subject: Optional[str] = None, **kwargs) -> ToolResult:
+        doc_title = title or kwargs.get("name") or kwargs.get("document_title") or "Technical Evaluation Note"
+        doc_subject = subject or kwargs.get("topic") or kwargs.get("summary")
+
+        # Flexible section extraction from various aliases
+        raw_sections = sections or kwargs.get("paragraphs") or kwargs.get("content") or kwargs.get("body") or kwargs.get("data")
+        clean_sections: List[SectionSpec] = []
+
+        if isinstance(raw_sections, list):
+            for i, s in enumerate(raw_sections):
+                if isinstance(s, dict):
+                    clean_sections.append(SectionSpec(heading=s.get("heading") or s.get("title") or f"Section {i+1}", content=str(s.get("content") or s.get("text") or s.get("body") or "")))
+                elif isinstance(s, str):
+                    clean_sections.append(SectionSpec(heading=f"Section {i+1}: Directive", content=s))
+        elif isinstance(raw_sections, str):
+            clean_sections = [SectionSpec(heading="Executive Summary & Directive", content=raw_sections)]
+        else:
+            clean_sections = [SectionSpec(heading="Executive Summary", content="Technical assessment and turnaround parameters recorded.")]
+
+        spec = DocxSpec(title=doc_title, subject=doc_subject, sections=clean_sections)
+        res = doc_service.generate(spec)
+        paragraphs = [f"**{s.heading}**\n{s.content}" for s in spec.sections]
+        deliverable = {
+            "type": "document", "file_type": "docx", "filename": res.filename, "path": f"/api/artifacts/{res.filename}",
+            "title": f"{spec.title} (.docx)", "subject": spec.subject, "paragraphs": paragraphs,
+            "sections": [s.model_dump() for s in spec.sections], "format": "Word Document (.docx)", "size_bytes": res.size_bytes
+        }
+        return ToolResult(tool_name="generate_word_document", success=True, output=f"Generated Word document '{res.filename}' ({res.size_bytes} bytes).", deliverables=[deliverable])
+
+    def _generate_powerpoint_wrapper(self, title: str = "Technical Assessment Brief", slides: Optional[List[Any]] = None, subtitle: Optional[str] = None, **kwargs) -> ToolResult:
+        ppt_title = title or kwargs.get("name") or kwargs.get("deck_title") or "Technical Assessment Brief"
+        ppt_sub = subtitle or kwargs.get("sub_title") or kwargs.get("description")
+
+        raw_slides = slides or kwargs.get("pages") or kwargs.get("content") or kwargs.get("items")
+        clean_slides: List[SlideSpec] = []
+
+        if isinstance(raw_slides, list):
+            for i, s in enumerate(raw_slides):
+                if isinstance(s, dict):
+                    stitle = s.get("title") or s.get("heading") or f"Slide {i+1}"
+                    bullets = s.get("bullets") or s.get("points") or s.get("content") or []
+                    if isinstance(bullets, str):
+                        bullets = [bullets]
+                    clean_slides.append(SlideSpec(title=stitle, bullets=[str(b) for b in bullets]))
+                elif isinstance(s, str):
+                    clean_slides.append(SlideSpec(title=f"Overview {i+1}", bullets=[s]))
+        else:
+            clean_slides = [SlideSpec(title="Overview", bullets=["Evaluation Complete"])]
+
+        spec = PptxSpec(title=ppt_title, subtitle=ppt_sub, slides=clean_slides)
+        res = doc_service.generate(spec)
+        deliverable = {
+            "type": "presentation", "file_type": "pptx", "filename": res.filename, "path": f"/api/artifacts/{res.filename}",
+            "title": f"{spec.title} (.pptx)", "subtitle": spec.subtitle or "Engineering Assessment", "slides": [s.model_dump() for s in spec.slides],
+            "format": "PowerPoint Deck (.pptx)", "size_bytes": res.size_bytes
+        }
+        return ToolResult(tool_name="generate_powerpoint_presentation", success=True, output=f"Generated PowerPoint deck '{res.filename}' ({res.size_bytes} bytes).", deliverables=[deliverable])
+
+    def _generate_excel_wrapper(self, title: str = "Engineering Calculation Sheet", headers: Optional[List[str]] = None, rows: Optional[List[List[Any]]] = None, sheet_name: str = "Calculations", rules: Optional[List[Dict[str, Any]]] = None, **kwargs) -> ToolResult:
+        xl_title = title or kwargs.get("name") or "Engineering Calculation Sheet"
+        xl_headers = headers or kwargs.get("columns") or kwargs.get("keys") or ["Parameter", "Calculated Value", "Unit", "Status"]
+        xl_rows = rows or kwargs.get("data") or kwargs.get("items") or kwargs.get("table") or []
+
+        default_rules = [
+            CellRule(match_values=["VERIFIED", "ACCEPTABLE", "PASS", "COMPLIANT"], color_hex="16A34A", bold=True),
+            CellRule(match_values=["FLAGGED", "NON-COMPLIANT", "FAIL", "CRITICAL", "ALERT"], color_hex="DC2626", bold=True),
+        ]
+        cell_rules = [CellRule(**r) for r in rules] if rules else default_rules
+        spec = XlsxSpec(title=xl_title, sheet_name=sheet_name, headers=xl_headers, rows=xl_rows, rules=cell_rules)
+        res = doc_service.generate(spec)
+        deliverable = {
+            "type": "spreadsheet", "file_type": "xlsx", "filename": res.filename, "path": f"/api/artifacts/{res.filename}",
+            "title": f"{spec.title} (.xlsx)", "headers": spec.headers, "rows": spec.rows,
+            "format": "Excel Workbook (.xlsx)", "size_bytes": res.size_bytes
+        }
+        return ToolResult(tool_name="generate_excel_spreadsheet", success=True, output=f"Generated Excel workbook '{res.filename}' ({res.size_bytes} bytes).", deliverables=[deliverable])
+
+    def _inspect_vision_wrapper(self, filename: str = "", **kwargs) -> ToolResult:
+        fname = filename or kwargs.get("path") or kwargs.get("name") or ""
+        info = vision_engine.inspect_image_file(fname)
+        if info.get("success"):
+            img = info.get("image_info", {})
+            return ToolResult(tool_name="inspect_visual_attachment", success=True, output=f"Image {fname}: {img.get('width')}x{img.get('height')}, {img.get('format')}")
+        return ToolResult(tool_name="inspect_visual_attachment", success=False, output=f"Could not inspect {fname}: {info.get('error')}", error=info.get("error"))
+
+
+tool_registry = ToolRegistry()
+
+
   
