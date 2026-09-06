@@ -12,6 +12,9 @@ rich>=13.7.0
 # Local Vector Database & RAG
 chromadb>=0.4.24
 numpy>=1.26.0
+langchain-chroma>=0.1.0
+langchain-community>=0.2.0
+langchain-text-splitters>=0.2.0
 
 # Document Text Extraction (Knowledge Base)
 pypdf>=4.1.0
