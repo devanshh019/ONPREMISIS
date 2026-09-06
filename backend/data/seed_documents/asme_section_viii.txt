@@ -1,0 +1,46 @@
+=============================================================================
+ASME BOILER & PRESSURE VESSEL CODE (BPVC) SECTION VIII, DIVISION 1
+Design of Cylindrical Shells, Heads, and Material Allowable Stress Standards
+=============================================================================
+
+1. SCOPE AND DESIGN OF CYLINDRICAL SHELLS UNDER INTERNAL PRESSURE (UG-27)
+For cylindrical shells subjected to internal design pressure (P), the minimum required thickness (t_min) exclusive of corrosion allowance is calculated as:
+
+Circumferential Stress (Longitudinal Joints):
+    t_min = (P * R) / (S * E - 0.6 * P)
+
+Where:
+    P = Internal design pressure (MPa or psi)
+    R = Internal radius of shell course before corrosion allowance is added (mm or inches)
+    S = Maximum allowable stress value of material at design temperature (MPa or psi)
+    E = Joint efficiency factor for welded joints (dimensionless, per Table UW-12)
+        - E = 1.00 for Type 1 butt joints with 100% full radiography (RT-1)
+        - E = 0.85 for Type 1 butt joints with spot radiography (RT-2/RT-3)
+        - E = 0.70 for Type 1 butt joints with no radiography (visual examination only)
+
+Longitudinal Stress (Circumferential Joints):
+    t_min = (P * R) / (2 * S * E + 0.4 * P)
+
+2. FORMED HEAD DESIGN FORMULAS (UG-32)
+- Ellipsoidal Heads (2:1 Standard): t_min = (P * D) / (2 * S * E - 0.2 * P)
+  Where D = Inside diameter of head skirt (mm).
+- Torispherical Heads (ASME Flanged and Dished): t_min = (0.885 * P * L) / (S * E - 0.1 * P)
+  Where L = Inside spherical crown radius (mm).
+- Hemispherical Heads: t_min = (P * R) / (2 * S * E - 0.2 * P)
+
+3. MATERIAL ALLOWABLE STRESS TABLES (ASME SECTION II PART D)
+- SA-516 Grade 70 Carbon Steel:
+  * Design Temperature -29°C to 260°C: S = 138 MPa (20,000 psi)
+  * Design Temperature 350°C: S = 120 MPa (17,400 psi)
+  * Design Temperature 400°C: S = 92 MPa (13,300 psi)
+- SA-387 Grade 11 Class 2 (1.25Cr-0.5Mo Alloy Steel):
+  * Design Temperature up to 450°C: S = 142 MPa (20,600 psi)
+- SA-240 Type 304 Stainless Steel:
+  * Design Temperature up to 300°C: S = 115 MPa (16,700 psi)
+- SA-240 Type 316L Stainless Steel:
+  * Design Temperature up to 300°C: S = 108 MPa (15,600 psi)
+
+4. HYDROSTATIC PROOF TEST REQUIREMENTS (UG-99)
+Completed pressure vessels shall pass a hydrostatic test at a pressure not less than:
+    P_test = 1.3 * MAWP * (S_test_temp / S_design_temp)
+Where MAWP is the Maximum Allowable Working Pressure.

@@ -1,0 +1,32 @@
+=============================================================================
+API 510: IN-SERVICE PRESSURE VESSEL INSPECTION CODE
+Maintenance Inspection, Rating, Repair, and Alteration Standards
+=============================================================================
+
+1. CORROSION RATE DETERMINATION (API 510 SECTION 7.1)
+The corrosion rate shall be calculated from ultrasonic thickness (UT) inspection readings:
+
+Long-Term Corrosion Rate (LT):
+    C_r(LT) = (t_initial - t_actual) / Time_between_initial_and_actual_years
+
+Short-Term Corrosion Rate (ST):
+    C_r(ST) = (t_previous - t_actual) / Time_between_previous_and_actual_years
+
+Governing Corrosion Rate:
+The higher of C_r(LT) and C_r(ST) shall be selected as the governing corrosion rate unless engineering analysis justifies the lower value.
+
+2. REMAINING SAFE OPERATING LIFE (RL)
+The remaining safe operating life of a pressure vessel course or nozzle is determined by:
+    Remaining Life (years) = (t_actual - t_required) / Governing_Corrosion_Rate (mm/year)
+
+Where:
+    t_actual = Smallest recorded actual thickness from ultrasonic testing (UT) (mm)
+    t_required = Minimum required shell thickness per ASME BPVC Sec VIII UG-27 (mm)
+    Governing_Corrosion_Rate = Corrosion rate in mm/year (positive value of metal loss rate)
+
+3. MAXIMUM INSPECTION INTERVALS (API 510 SECTION 6)
+The period between internal inspections or on-stream ultrasonic thickness evaluations shall not exceed:
+    Interval_max = Minimum( 10 years, Remaining Life / 2 )
+
+If Remaining Life is less than 4 years, the inspection interval shall not exceed 2 years.
+If the elapsed time since the last inspection exceeds Interval_max, the vessel is OVERDUE for inspection.

@@ -1,0 +1,199 @@
+# =============================================================================
+# SOVEREIGN INDUSTRIAL ENGINEERING & TECHNICAL COMPLIANCE MANUAL
+# Reference Standard: ASME BPVC, API 510/570, TEMA Standards & GFR-2017
+# Classification: CONFIDENTIAL // ON-PREMISES TECHNICAL REFERENCE
+# =============================================================================
+
+=============================================================================
+CHAPTER 1: ASME BOILER & PRESSURE VESSEL CODE (BPVC) SECTION VIII, DIVISION 1
+=============================================================================
+
+1.1 SCOPE AND JURISDICTION
+ASME BPVC Section VIII Division 1 provides rules and mandatory requirements covering the design, fabrication, inspection, testing, and certification of pressure vessels operating at internal or external pressures exceeding 15 psig (103 kPa).
+
+1.2 DESIGN OF CYLINDRICAL SHELLS UNDER INTERNAL PRESSURE (UG-27)
+For cylindrical shells subjected to internal design pressure (P), the minimum required thickness (t_min) exclusive of corrosion allowance is calculated as follows:
+
+1.2.1 Circumferential Stress (Longitudinal Joints):
+When the thickness does not exceed one-half of the inside radius, or P does not exceed 0.385 * S * E:
+    t_min = (P * R) / (S * E - 0.6 * P)
+
+Where:
+    P = Internal design pressure (MPa or psi)
+    R = Internal radius of shell course before corrosion allowance is added (mm or inches)
+    S = Maximum allowable stress value of material at design temperature (MPa or psi)
+    E = Joint efficiency factor for welded joints (dimensionless, per Table UW-12)
+        - E = 1.00 for Type 1 butt joints with 100% full radiography (RT-1)
+        - E = 0.85 for Type 1 butt joints with spot radiography (RT-2/RT-3)
+        - E = 0.70 for Type 1 butt joints with no radiography (visual examination only)
+
+1.2.2 Longitudinal Stress (Circumferential Joints):
+When the thickness does not exceed one-half of the inside radius, or P does not exceed 1.25 * S * E:
+    t_min = (P * R) / (2 * S * E + 0.4 * P)
+
+1.3 FORMED HEAD DESIGN FORMULAS (UG-32)
+1.3.1 Ellipsoidal Heads (2:1 Standard Semi-Ellipsoidal):
+    t_min = (P * D) / (2 * S * E - 0.2 * P)
+Where D = Inside diameter of head skirt (mm).
+
+1.3.2 Torispherical Heads (ASME Flanged and Dished):
+    t_min = (0.885 * P * L) / (S * E - 0.1 * P)
+Where L = Inside spherical crown radius (mm).
+
+1.3.3 Hemispherical Heads:
+When thickness does not exceed 0.356 * R:
+    t_min = (P * R) / (2 * S * E - 0.2 * P)
+
+1.4 MATERIAL ALLOWABLE STRESS TABLES (ASME SECTION II PART D)
+- SA-516 Grade 70 Carbon Steel:
+  * Design Temperature -29°C to 260°C: S = 138 MPa (20,000 psi)
+  * Design Temperature 350°C: S = 120 MPa (17,400 psi)
+  * Design Temperature 400°C: S = 92 MPa (13,300 psi)
+- SA-387 Grade 11 Class 2 (1.25Cr-0.5Mo Alloy Steel):
+  * Design Temperature up to 450°C: S = 142 MPa (20,600 psi)
+- SA-240 Type 304 Stainless Steel:
+  * Design Temperature up to 300°C: S = 115 MPa (16,700 psi)
+- SA-240 Type 316L Stainless Steel:
+  * Design Temperature up to 300°C: S = 108 MPa (15,600 psi)
+
+1.5 HYDROSTATIC PROOF TEST REQUIREMENTS (UG-99)
+Completed pressure vessels shall pass a hydrostatic test at a pressure not less than:
+    P_test = 1.3 * MAWP * (S_test_temp / S_design_temp)
+Where MAWP is the Maximum Allowable Working Pressure stamped on the nameplate.
+
+
+=============================================================================
+CHAPTER 2: API 510 IN-SERVICE PRESSURE VESSEL INSPECTION CODE
+=============================================================================
+
+2.1 SCOPE
+API 510 covers in-service inspection, repair, alteration, and rerating activities for pressure vessels and pressure-relieving devices used in petroleum refineries and chemical processing facilities.
+
+2.2 CORROSION RATE DETERMINATION
+2.2.1 Long-Term Corrosion Rate (LT):
+    C_r(LT) = (t_initial - t_actual) / (Time between t_initial and t_actual in years)
+
+2.2.2 Short-Term Corrosion Rate (ST):
+    C_r(ST) = (t_previous - t_actual) / (Time between t_previous and t_actual in years)
+
+2.3 REMAINING SAFE OPERATING LIFE (RL)
+The remaining safe operating life of a pressure vessel course or nozzle is determined by:
+    Remaining Life (years) = (t_actual - t_required) / Corrosion Rate (mm/year)
+
+Where:
+    t_actual = Smallest recorded thickness measurement from ultrasonic testing (UT)
+    t_required = Minimum required thickness calculated per ASME BPVC Sec VIII UG-27
+    Corrosion Rate = Governing corrosion rate (higher of ST or LT unless justified)
+
+2.4 MAXIMUM INSPECTION INTERVALS (API 510 SECTION 6)
+2.4.1 Internal or On-Stream Inspection:
+The period between internal inspections or on-stream ultrasonic thickness evaluations shall not exceed:
+    Interval_max = Minimum( 10 years, Remaining Life / 2 )
+If the remaining life is less than 4 years, the inspection interval shall be determined by the vessel engineer but shall not exceed 2 years.
+
+2.5 TEMPORARY REPAIRS & WELD OVERLAY CLADDING
+- Fillet-welded patches shall not be used on pressure vessels unless approved by the pressure vessel engineer and authorized inspector.
+- Corrosion-resistant weld overlay (Inconel 625 or 309L/316L SS) requires a minimum deposit thickness of 3.0 mm and 100% liquid penetrant inspection (PT) of the final pass.
+
+
+=============================================================================
+CHAPTER 3: API 570 PROCESS PIPING INSPECTION CODE
+=============================================================================
+
+3.1 SCOPE AND PIPE RETIREMENT THICKNESS
+API 570 governs inspection, rating, repair, and alteration of in-service metallic and fiberglass process piping systems.
+
+3.2 MINIMUM THICKNESS FORMULA (ASME B31.3 PROCESS PIPING)
+    t_min = (P * D) / (2 * (S * E + P * Y))
+
+Where:
+    P = Internal design pressure (MPa or psig)
+    D = Outside diameter of pipe (mm or inches)
+    S = Allowable stress per ASME B31.3 Table A-1 (MPa)
+    E = Longitudinal quality factor / joint efficiency (0.85 to 1.0)
+    Y = Coefficient per ASME B31.3 (Y = 0.4 for ferritic steels below 482°C)
+
+3.3 PIPING CLASS INSPECTION FREQUENCIES
+- Class 1 (High Hazard: Flammable gases, H2S > 3%, anhydrous ammonia):
+  * Visual external inspection: 5 years
+  * Ultrasonic thickness measurement (UT CML): 5 years
+- Class 2 (Moderate Hazard: Hydrocarbons, steam, hot water, sour water):
+  * Visual external inspection: 5 years
+  * Thickness measurement: 10 years
+- Class 3 (Low Hazard: Nitrogen, lube oil, non-flammable cooling water):
+  * Visual external inspection: 10 years
+  * Thickness measurement: Optional / 10 years
+
+
+=============================================================================
+CHAPTER 4: THERMAL & HEAT EXCHANGER DESIGN (TEMA & IS-4503)
+=============================================================================
+
+4.1 HEAT TRANSFER FUNDAMENTALS
+Heat duty (Q) transferred across a heat exchanger is governed by:
+    Q = m_dot * Cp * (T_in - T_out)  [for single phase fluid without phase change]
+    Q = U * A * LMTD * F             [overall heat exchanger equation]
+
+Where:
+    m_dot = Mass flow rate (kg/s)
+    Cp = Specific heat capacity (kJ/kg·K)
+    U = Overall heat transfer coefficient (W/m²·K)
+    A = Total heat transfer area (m²)
+    F = LMTD correction factor (F = 1.0 for pure counter-current flow; F < 1.0 for multi-pass shell and tube)
+
+4.2 LOG MEAN TEMPERATURE DIFFERENCE (LMTD)
+For a counter-current flow heat exchanger:
+    Delta_T1 = T_hot_in - T_cold_out
+    Delta_T2 = T_hot_out - T_cold_in
+    LMTD = (Delta_T1 - Delta_T2) / ln( Delta_T1 / Delta_T2 )
+
+4.3 TYPICAL OVERALL HEAT TRANSFER COEFFICIENTS (U):
+- Water to Water: 800 - 1500 W/m²·K
+- Steam to Heavy Fuel Oil: 150 - 300 W/m²·K
+- Hydrocarbon Vapor to Water Condenser: 300 - 600 W/m²·K
+- Light Gas to Gas: 20 - 80 W/m²·K
+
+
+=============================================================================
+CHAPTER 5: PUBLIC PROCUREMENT & GOVERNANCE RULES (GFR 2017)
+=============================================================================
+
+5.1 GENERAL PRINCIPLES OF PUBLIC BUYING (RULE 144)
+Every authority delegated the financial powers of procuring goods in public interest shall ensure:
+1. Specifications are clear, generic, and do not favor any single proprietary firm.
+2. The procurement process is competitive, transparent, and fair to all qualified vendors.
+3. Offers meet techno-commercial specifications before opening financial bids (Two-Bid System).
+
+5.2 TWO-BID SYSTEM (RULE 160 & RULE 163)
+For high-value plant equipment and turnkey contracts exceeding INR 25 Lakhs:
+- Envelope 1: Technical & Commercial Bid (containing credentials, quality certifications, design proofs, EMD).
+- Envelope 2: Financial / Price Bid.
+Financial bids of only those bidders who meet the technical qualifying requirements shall be opened.
+
+5.3 EARNEST MONEY DEPOSIT (EMD) & PERFORMANCE SECURITY (RULE 170 & 171)
+- EMD (Bid Security): 2% to 5% of estimated tender value.
+- Performance Security (PBG): 5% to 10% of contract value, valid for warranty period plus 60 days.
+
+5.4 PURCHASE PREFERENCE (MAKE IN INDIA ORDER 2017)
+- Class-I Local Supplier: Local content >= 50% (eligible for purchase preference when L1 quote is non-local).
+- Class-II Local Supplier: Local content between 20% and 49%.
+- Non-Local Supplier: Local content < 20%.
+
+
+=============================================================================
+CHAPTER 6: INDUSTRIAL PLANT SAFETY & P&ID DRAWING INTERLOCKS (OISD / OSHA)
+=============================================================================
+
+6.1 DOUBLE BLOCK AND BLEED (DBB) ISOLATION (OISD-STD-118)
+Positive isolation via Double Block and Bleed valve arrangements is mandatory on:
+1. Hydrocarbon lines operating above 20 bar or 150°C during maintenance shutdowns.
+2. Fuel gas lines leading into fired heaters and boilers during burner maintenance.
+3. H2S-bearing sour crude feed trains and toxic chemical injection lines.
+
+6.2 PRESSURE RELIEF VALVE (PRV/PSV) DESIGN BASIS (API 520 / 526)
+Pressure safety valves shall be sized to relieve the maximum probable overpressure scenario:
+- Blocked discharge
+- Fire envelope exposure (API 521 wetted surface area heat absorption)
+- Tube rupture in shell-and-tube heat exchangers
+- External utility power failure
+Set pressure shall not exceed 100% MAWP for single relief valve installations, or 105% MAWP for supplemental multiple relief valves.

@@ -29,3 +29,29 @@ logs/
 .idea/
 .DS_Store
 Thumbs.db
+
+
+# Local Storage & ChromaDB Vector Database
+
+backend/data/storage/*
+!backend/data/storage/.gitkeep
+backend/data/storage/chroma_db/
+backend/data/storage/on_premises_cache/
+backend/data/storage/uploads/
+backend/data/storage/kb_docs/
+*.sqlite
+*.sqlite3
+*.bin
+*.db
+
+
+# Generated Office Deliverables & Simulation Artifacts
+
+*.docx
+*.pptx
+*.xlsx
+plot_*.png
+agent_calc_*.py
+test_sim_*.py
+exec_sim_*.py
+sandbox_sim_*.py

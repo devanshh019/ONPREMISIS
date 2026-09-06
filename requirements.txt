@@ -1,0 +1,24 @@
+# Core Web Gateway & REST API
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+python-multipart>=0.0.9
+pydantic>=2.6.0
+
+# Local AI Inference & Runtime
+httpx>=0.27.0
+PyYAML>=6.0.1
+rich>=13.7.0
+
+# Local Vector Database & RAG
+chromadb>=0.4.24
+numpy>=1.26.0
+
+# Document Text Extraction (Knowledge Base)
+pypdf>=4.1.0
+python-docx>=1.1.0
+
+# Enterprise Office Deliverable Generation
+python-pptx>=0.6.23
+openpyxl>=3.1.2
+matplotlib>=3.8.3
+pillow>=10.2.0

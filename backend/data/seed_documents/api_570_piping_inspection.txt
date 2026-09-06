@@ -1,0 +1,10 @@
+API STANDARD 570: PIPING INSPECTION CODE
+In-service Inspection, Rating, Repair, and Alteration of Piping Systems
+
+Section 5.4: Circuit Thickness Measurements and Injection Point Inspection
+Process piping circuits in hydrocarbon service shall have designated thickness measurement locations (TMLs).
+
+Key Directives:
+- Injection points, control valve stations, and turbulent mixing tees require 100% UT scanning.
+- Deadlegs and bypass piping around control valves (e.g., bypass loops around FV valves) must be examined for stagnant acid condensation and localized corrosion.
+- Minimum remaining thickness must account for internal design pressure and structural minimum wall thickness per ASME B31.3.

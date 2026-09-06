@@ -1,0 +1,23 @@
+=============================================================================
+GENERAL FINANCIAL RULES (GFR) 2017 & PUBLIC PROCUREMENT GUIDELINES
+Ministry of Finance, Government of India
+=============================================================================
+
+1. TWO-BID SYSTEM (RULE 160 & RULE 163)
+For high-value equipment, fabrication contracts, and pressure vessel replacements exceeding INR 25 Lakhs:
+- Envelope 1: Technical & Commercial Bid (containing technical compliance, vendor credentials, quality certifications, design proofs, EMD).
+- Envelope 2: Financial / Price Bid.
+Financial bids of only those bidders who meet the technical qualifying requirements shall be opened.
+
+2. EARNEST MONEY DEPOSIT (EMD) & PERFORMANCE SECURITY (RULE 170 & 171)
+- EMD (Bid Security): 2% to 5% of estimated tender value.
+  For a project of INR 40 Lakhs (4,000,000):
+  * EMD 2% = INR 80,000 (0.8 Lakhs)
+  * EMD 5% = INR 2,00,000 (2.0 Lakhs)
+  * Applicable EMD Range = INR 80,000 to INR 2,00,000 (INR 0.8 Lakhs to 2.0 Lakhs).
+- Performance Security (PBG): 5% to 10% of contract value, valid for warranty period plus 60 days.
+
+3. PURCHASE PREFERENCE (MAKE IN INDIA ORDER 2017)
+- Class-I Local Supplier: Local content >= 50%.
+- Class-II Local Supplier: Local content between 20% and 49%.
+- Non-Local Supplier: Local content < 20%.
