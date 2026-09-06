@@ -12,7 +12,7 @@ function createFreshSession() {
 export default function useChatSessions() {
   const [sessions, setSessions] = useState(() => {
     try {
-      const saved = localStorage.getItem('kavach_chat_sessions');
+      const saved = localStorage.getItem('onpremisis_chat_sessions');
       let parsed = saved ? JSON.parse(saved) : [];
       parsed = parsed.filter(s => s.messages && s.messages.length > 0);
       const freshSession = createFreshSession();
@@ -24,21 +24,18 @@ export default function useChatSessions() {
 
   const [currentSessionId, setCurrentSessionId] = useState(() => sessions[0]?.id || `sess-${Date.now()}`);
 
-
   useEffect(() => {
     try {
       const toSave = sessions.filter(s => (s.messages && s.messages.length > 0) || s.id === currentSessionId);
-      localStorage.setItem('kavach_chat_sessions', JSON.stringify(toSave));
-    } catch (e) { /* ignore */ }
+      localStorage.setItem('onpremisis_chat_sessions', JSON.stringify(toSave));
+    } catch (e) {}
   }, [sessions, currentSessionId]);
 
   const currentSession = sessions.find(s => s.id === currentSessionId) || sessions[0];
   const messages = currentSession?.messages || [];
 
   const handleNewChat = () => {
-    if (currentSession && currentSession.messages.length === 0) {
-      return;
-    }
+    if (currentSession && currentSession.messages.length === 0) return;
     const newSess = createFreshSession();
     setSessions(prev => [newSess, ...prev.filter(s => s.messages && s.messages.length > 0)]);
     setCurrentSessionId(newSess.id);

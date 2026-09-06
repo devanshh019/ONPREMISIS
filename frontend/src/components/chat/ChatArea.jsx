@@ -15,6 +15,9 @@ export default function ChatArea({
   onSelectDeliverable,
   onSend,
   loading,
+  healthData,
+  onExpandImage,
+  currentSessionId,
 }) {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -36,6 +39,14 @@ export default function ChatArea({
   };
 
   useEffect(() => {
+    isUserAtBottomRef.current = true;
+    setShowScrollBottomBtn(false);
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    }, 40);
+  }, [currentSessionId]);
+
+  useEffect(() => {
     if (isUserAtBottomRef.current) {
       scrollToBottom();
     }
@@ -55,7 +66,7 @@ export default function ChatArea({
             </div>
             <div className="space-y-1.5">
               <h2 className="text-lg font-bold tracking-tight text-[#1c1917]">
-                How can KAVACH assist you today?
+                How can ONPREMISIS assist you today?
               </h2>
               <p className="text-xs text-[#57534e] max-w-md mx-auto leading-relaxed">
                 On-premises sovereign engineering assistant powered by <strong>Gemma 3 4B</strong>.
@@ -88,19 +99,24 @@ export default function ChatArea({
               msg={msg}
               selectedDeliverable={selectedDeliverable}
               onSelectDeliverable={onSelectDeliverable}
+              onExpandImage={onExpandImage}
             />
           ))
         )}
+
         {isCurrentSessionLoading && (
           <ThinkingIndicator
             elapsedTimer={elapsedTimer}
             thinkingExpanded={thinkingExpanded}
             setThinkingExpanded={setThinkingExpanded}
             activeTaskMeta={activeTaskMeta}
+            healthData={healthData}
           />
         )}
+
         <div ref={messagesEndRef} />
       </div>
+
       {showScrollBottomBtn && (
         <button
           onClick={() => {
