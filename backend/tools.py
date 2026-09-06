@@ -104,6 +104,22 @@ class ToolRegistry:
             },
             func=self._generate_word_wrapper,
         )
+        # 4. generate ppt
+        self.register_tool(
+            name="generate_powerpoint_presentation",
+            description="Creates a 16:9 widescreen PowerPoint presentation deck (.pptx) from structured slide data.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "subtitle": {"type": "string"},
+                    "slides": {"type": "array", "items": {"type": "object", "properties": {"title": {"type": "string"}, "bullets": {"type": "array", "items": {"type": "string"}}}, "required": ["title", "bullets"]}},
+                },
+                "required": ["title", "slides"],
+            },
+            func=self._generate_powerpoint_wrapper,
+        )
+
         # 5. generate_excel_spreadsheet
         self.register_tool(
             name="generate_excel_spreadsheet",
