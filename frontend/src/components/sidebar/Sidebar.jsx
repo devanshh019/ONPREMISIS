@@ -116,10 +116,6 @@ export default function Sidebar({
             <span>Foundation Model:</span>
             <span className="text-[#1c1917] font-semibold truncate max-w-[110px]">{healthData?.active_foundation_model || 'Local Model'}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <span>RAM Allocation:</span>
-            <span className="text-[#1c1917] font-mono">{healthData?.ram_allocated_gb || 3.4} GB</span>
-          </div>
           <div className="flex items-center space-x-1.5 text-[#57534e] pt-0.5">
             <span className={`w-1.5 h-1.5 rounded-full ${healthData?.ollama_backend?.available ? 'bg-[#16a34a]' : 'bg-[#ea580c]'}`}></span>
             <span>{healthData?.ollama_backend?.available ? 'Ollama Online' : '100% On-Premises Isolated'}</span>
