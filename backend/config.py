@@ -13,7 +13,7 @@ KB_DOCS_DIR = STORAGE_DIR / "kb_docs" #Store Files Added By User To Kb
 CHROMA_DIR = STORAGE_DIR / "chroma_db"  #Vec Store
 FRONTEND_DIST_DIR = PROJECT_ROOT / "frontend" / "dist" #Frontend Path
 ON_PREMISES_CACHE_DIR = STORAGE_DIR / "on_premises_cache"
-MODEL_YAML_PATH = BASE_DIR / "model_registry.yaml"
+MODELS_YAML_PATH = BASE_DIR / "model_registry.yaml"
 for dr in [DATA_DIR, SEED_DOCS_DIR, STORAGE_DIR, UPLOADS_DIR, KB_DOCS_DIR, CHROMA_DIR,ON_PREMISES_CACHE_DIR]:
     dr.mkdir(parents=True, exist_ok=True)
 
