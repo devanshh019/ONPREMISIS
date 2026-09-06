@@ -12,28 +12,25 @@ export default function Sidebar({
   loadingSessionId,
   loading,
   healthData,
-  scenarios,
   allArtifactsCount,
   onNewChat,
   onSelectSession,
   onDeleteSession,
-  onSend,
   onOpenModal,
 }) {
   return (
     <aside
       className={`${sidebarOpen ? 'w-64' : 'w-0 -translate-x-full'
-        } transition-all duration-300 ease-in-out bg-[#f4efe6] border-r border-[#e5ded1] flex flex-col justify-between shrink-0 z-30 overflow-hidden select-none`}
+      } transition-all duration-300 ease-in-out bg-[#f4efe6] border-r border-[#e5ded1] flex flex-col justify-between shrink-0 z-30 overflow-hidden select-none`}
     >
       <div className="flex flex-col h-full overflow-hidden p-4">
-
         <div className="flex items-center justify-between mb-3 px-1">
           <div className="flex items-center space-x-2.5">
             <div className="w-6 h-6 rounded-md bg-[#ea580c] flex items-center justify-center text-white shadow-sm">
               <ShieldCheck className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h1 className="text-xs font-bold tracking-wider text-[#1c1917] uppercase">KAVACH</h1>
+              <h1 className="text-xs font-bold tracking-wider text-[#1c1917] uppercase">ONPREMISIS</h1>
               <p className="text-[9px] text-[#78716c] font-mono tracking-tight">SOVEREIGN WORKBENCH</p>
             </div>
           </div>
@@ -64,30 +61,7 @@ export default function Sidebar({
             onSelectSession={onSelectSession}
             onDeleteSession={onDeleteSession}
           />
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-none">
-            <div>
-              <div className="text-[10px] uppercase tracking-wider text-[#78716c] px-1 mb-1.5 font-bold">
-                Standard Workflows
-              </div>
-              <div className="space-y-1">
-                {scenarios.map((sc) => (
-                  <button
-                    key={sc.id}
-                    onClick={() => onSend(sc.prompt)}
-                    disabled={loading}
-                    className="w-full text-left p-2 rounded-lg text-xs hover:bg-[#ede7dc] text-[#44403c] hover:text-[#1c1917] transition-colors group flex items-start space-x-2 border border-transparent hover:border-[#d6cebf]"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#ea580c] mt-1.5 shrink-0 group-hover:scale-125 transition-transform" />
-                    <div className="flex-1 truncate">
-                      <div className="font-medium text-[#1c1917] truncate group-hover:text-[#ea580c] transition-colors text-[11px]">
-                        {sc.title}
-                      </div>
-                      <div className="text-[9px] text-[#78716c] truncate">{sc.badge}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="space-y-3 pt-2 border-t border-[#e5ded1]">
             <div>
               <div className="text-[10px] uppercase tracking-wider text-[#78716c] px-1 mb-1.5 font-bold">
                 Integrity & Tools

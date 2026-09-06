@@ -150,7 +150,7 @@ export default function DeliverableInspector({ artifact, onClose, onZoomImage })
           </div>
           <div className="p-4 rounded-lg bg-[#ffffff] border border-[#e5ded1] shadow-xs space-y-3 min-h-[220px]">
             <div className="p-3 bg-[#1c1917] rounded-md text-[#faf8f5]">
-              <div className="text-[10px] font-mono uppercase text-[#ea580c] font-semibold">KAVACH-AI • 16:9 Executive Deck</div>
+              <div className="text-[10px] font-mono uppercase text-[#ea580c] font-semibold">ONPREMISIS-AI • 16:9 Executive Deck</div>
               <div className="text-xs font-bold text-white mt-0.5">{slides[activeSlide]?.title || `Slide ${activeSlide + 1}`}</div>
             </div>
             <div className="space-y-2 pt-1">

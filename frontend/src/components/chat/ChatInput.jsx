@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import { Send, Paperclip, Mic, FileText, X } from 'lucide-react';
 
 export default function ChatInput({
@@ -13,8 +14,55 @@ export default function ChatInput({
   onFileSelect,
   onFilesAdd,
   onRemoveAttachment,
-  onOpenVoice,
 }) {
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert("Voice speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+      return;
+    }
+
+    try {
+      const rec = new SpeechRec();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = 'en-US';
+
+      rec.onstart = () => setIsListening(true);
+
+      rec.onresult = (event) => {
+        let text = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            text += event.results[i][0].transcript + ' ';
+          }
+        }
+        if (text) {
+          setPrompt(prev => prev ? `${prev.trim()} ${text.trim()}` : text.trim());
+        }
+      };
+
+      rec.onerror = () => setIsListening(false);
+      rec.onend = () => setIsListening(false);
+
+      recognitionRef.current = rec;
+      rec.start();
+    } catch (e) {
+      setIsListening(false);
+    }
+  };
+
   return (
     <div className="p-4 bg-gradient-to-t from-[#faf8f5] via-[#faf8f5]/90 to-transparent shrink-0">
       <form
@@ -34,8 +82,9 @@ export default function ChatInput({
             onFilesAdd(Array.from(e.dataTransfer.files));
           }
         }}
-        className={`max-w-3xl mx-auto relative bg-[#ffffff] border ${isDragging ? 'border-[#ea580c] ring-2 ring-[#ea580c]/20' : 'border-[#d6cebf]'
-          } rounded-xl shadow-md p-2 focus-within:border-[#ea580c] transition-all`}
+        className={`max-w-3xl mx-auto relative bg-[#ffffff] border ${
+          isDragging ? 'border-[#ea580c] ring-2 ring-[#ea580c]/20' : 'border-[#d6cebf]'
+        } rounded-xl shadow-md p-2 focus-within:border-[#ea580c] transition-all`}
       >
         <input
           type="file"
@@ -45,6 +94,7 @@ export default function ChatInput({
           className="hidden"
           accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx,.txt,.csv,.py"
         />
+
         {attachedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2 pb-2 mb-1.5 border-b border-[#f0eae0]">
             {attachedFiles.map((file, idx) => (
@@ -71,6 +121,7 @@ export default function ChatInput({
             ))}
           </div>
         )}
+
         <div className="flex items-center space-x-1.5">
           <button
             type="button"
@@ -80,10 +131,19 @@ export default function ChatInput({
           >
             <Paperclip className="w-4 h-4" />
           </button>
+
           <input
             type="text"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if ((prompt.trim() || attachedFiles.length > 0) && !loading) {
+                  onSubmit();
+                }
+              }
+            }}
             placeholder={
               attachedFiles.length > 0
                 ? "Ask about attached file(s) or leave empty for analysis..."
@@ -92,26 +152,34 @@ export default function ChatInput({
             disabled={loading}
             className="flex-1 bg-transparent px-2.5 py-1.5 text-xs text-[#1c1917] placeholder-[#a8a29e] focus:outline-none font-sans"
           />
+
           <button
             type="button"
-            onClick={onOpenVoice}
-            className="p-1.5 rounded-lg text-[#78716c] hover:text-[#ea580c] hover:bg-[#f4efe6] transition-colors"
-            title="Open Voice Dictation"
+            onClick={toggleVoiceInput}
+            className={`p-1.5 rounded-lg transition-all ${
+              isListening
+                ? 'bg-[#ea580c] text-white animate-pulse shadow-md'
+                : 'text-[#78716c] hover:text-[#ea580c] hover:bg-[#f4efe6]'
+            }`}
+            title={isListening ? "Stop Voice Dictation (Listening...)" : "Click to Speak & Transcribe directly into chat"}
           >
-            <Mic className="w-4 h-4" />
+            <Mic className={`w-4 h-4 ${isListening ? 'animate-bounce' : ''}`} />
           </button>
+
           <button
             type="submit"
             disabled={loading || (!prompt.trim() && attachedFiles.length === 0)}
-            className={`p-2 rounded-lg transition-all ${loading || (!prompt.trim() && attachedFiles.length === 0)
+            className={`p-2 rounded-lg transition-all ${
+              loading || (!prompt.trim() && attachedFiles.length === 0)
                 ? 'bg-[#ede7dc] text-[#a8a29e] cursor-not-allowed'
                 : 'bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold shadow-sm'
-              }`}
+            }`}
             title="Send Task"
           >
             <Send className="w-3.5 h-3.5" />
           </button>
         </div>
+
         <div className="flex items-center justify-between px-2 pt-1.5 text-[10px] text-[#78716c] font-mono border-t border-[#f0eae0] mt-1">
           <span>{healthData?.active_foundation_model || 'Local Model'} (~3.4 GB RAM)</span>
           <span>100% On-Premises • Zero Egress</span>
