@@ -127,4 +127,69 @@ class ToolRegistry:
             description="Inspects technical diagrams, P&IDs, blueprints, and images for dimensions and structure.",
             parameters={"type": "object", "properties": {"filename": {"type": "string"}}, "required": ["filename"]},
             func=self._inspect_vision_wrapper,
-        )    
+        )  
+
+    def _search_kb_wrapper(self, query: str = "", top_k: int = 3, **kwargs) -> ToolResult:
+        search_query = query or kwargs.get("text") or kwargs.get("q") or "engineering standard"
+        citations = knowledge_base.search(search_query, top_k=top_k)
+        if not citations:
+            return ToolResult(tool_name="search_knowledge_base", success=True, output=f"No matches for query '{search_query}'.", citations=[])
+        snippets = [f"[{i}] Standard: '{c['title']}':\n{c['full_content']}" for i, c in enumerate(citations, 1)]
+        return ToolResult(tool_name="search_knowledge_base", success=True, output="\n\n".join(snippets), citations=citations)
+
+    def _execute_code_wrapper(self, code: str = "", **kwargs) -> ToolResult:
+        py_code = code or kwargs.get("script") or kwargs.get("python_code") or ""
+        if not py_code.strip():
+            return ToolResult(tool_name="execute_python_code", success=False, output="Error: Empty Python code provided. You must supply the complete script in the 'code' parameter, e.g. Action Input: {\"code\": \"def solution(): ...\\nprint(solution())\"}", error="Empty code")
+
+        title = kwargs.get("title") or "agent_calc"
+        timeout = int(kwargs.get("timeout_seconds") or 15)
+        spec = PySpec(title=title, code=py_code, timeout_seconds=timeout)
+
+        from .config import STORAGE_DIR
+        timestamp = int(time.time() * 1000)
+        output_script_name = f"agent_calc_{timestamp}.py"
+        output_path = Path(STORAGE_DIR) / output_script_name
+
+        from .document_generator import py_executor
+        code_deliverable = py_executor.deliver(spec, output_path)
+        exec_res = code_deliverable.execution
+
+        deliverables = []
+        for p in exec_res.plots:
+            deliverables.append({
+                "type": "plot",
+                "file_type": "png",
+                "filename": p["filename"],
+                "path": p["path"],
+                "title": p.get("title") or "Generated Plot",
+                "format": "PNG Image",
+            })
+
+        if code_deliverable.path:
+            deliverables.append({
+                "type": "code",
+                "file_type": "py",
+                "filename": code_deliverable.filename,
+                "path": f"/api/artifacts/{code_deliverable.filename}",
+                "title": "Executed Python Simulation",
+                "format": "Python Script",
+                "code": py_code,
+                "stdout": exec_res.stdout,
+                "stderr": exec_res.stderr,
+            })
+
+        out = f"Exit Code: {exec_res.exit_code}\nStdout:\n{exec_res.stdout or '(none)'}"
+        if exec_res.stderr:
+            out += f"\nStderr:\n{exec_res.stderr}"
+
+        return ToolResult(
+            tool_name="execute_python_code",
+            success=exec_res.success,
+            output=out,
+            error=exec_res.stderr if not exec_res.success else None,
+            deliverables=deliverables,
+            duration_ms=exec_res.duration_ms,
+        )
+
+  
