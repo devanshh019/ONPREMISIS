@@ -177,7 +177,7 @@ class AirGapSentinel:
             "outbound_egress_bytes": self.outbound_egress_bytes,
             "external_dns_queries": self.external_dns_queries,
             "active_loopback_sockets": [
-                {"service": "KAVACH API Gateway", "bind": f"{HOST}:{PORT}", "role": "SOVEREIGN_BACKEND"},
+                {"service": "ONPREMISIS API Gateway", "bind": f"{HOST}:{PORT}", "role": "SOVEREIGN_BACKEND"},
                 {"service": "Ollama Inference Engine", "bind": OLLAMA_BASE_URL.replace("http://", "").replace("https://", ""), "role": "LOCAL_MODEL_INFERENCE"},
                 {"service": "Industrial Sandbox IPC", "bind": "127.0.0.1 (Ephemeral)", "role": "ISOLATED_COMPUTE"},
             ],
@@ -213,7 +213,7 @@ class AirGapSentinel:
             "chain_root_hash": self.audit_root_hash,
             "chain_head_hash": self.audit_chain_hash,
             "audit_events_total": self._audit_counter,
-            "auditor_signature": "KAVACH_SENTINEL_SHA256_VERIFIED",
+            "auditor_signature": "ONPREMISIS_SENTINEL_SHA256_VERIFIED",
         }
 
 
