@@ -175,30 +175,36 @@ MULTIMODAL_IMAGE_INSPECTION
 ## System Architecture
 
 ```text
-                    ┌─────────────────────┐
-                    │    React Frontend   │
-                    │     Vite + Tailwind  │
-                    └──────────┬──────────┘
-                               │
-                               │ Local API
+┌─────────────────────────────────────────────────────────────┐
+│                    React Frontend (UI)                      │
+│        Chat • File Upload • Live Deliverables Inspector     │
+└──────────────────────────────┬──────────────────────────────┘
+                               │  http://127.0.0.1:8000
                                ▼
-                    ┌─────────────────────┐
-                    │   Python Backend    │
-                    │                     │
-                    │  Task Router        │
-                    │  Model Manager      │
-                    │  RAG Knowledge Base │
-                    │  Inference Engine   │
-                    │  Vision Engine      │
-                    └───────┬───────┬─────┘
-                            │       │
-                  ┌─────────┘       └──────────┐
-                  ▼                            ▼
-        ┌──────────────────┐          ┌──────────────────┐
-        │ Local ChromaDB   │          │ Local Ollama     │
-        │ Vector Store     │          │ LLM Runtime      │
-        └──────────────────┘          └──────────────────┘
-```
+┌─────────────────────────────────────────────────────────────┐
+│               FastAPI Gateway & Security Sentinel           │
+│     Air-Gap Policy Enforcement • SHA-256 Audit Logging      │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│            Dynamic Task Router & ReAct Agent Engine         │
+│     Semantic Persona Routing • Multi-Turn Thought Loop      │
+└──────────────┬───────────────────────────────┬──────────────┘
+               │                               │
+               ▼                               ▼
+┌──────────────────────────────┐┌──────────────────────────────┐
+│     Sovereign Tool Engine    ││     Local Ollama Runtime     │
+│ • Python Sandbox (Matplotlib)││ • Gemma 3 4B (Foundation)    │
+│ • Office Generator (Docx/Xls)││ • Qwen 2.5 (Code & Math)     │
+│ • ChromaDB Vector Knowledge  ││ • 100% Local Inference       │
+└──────────────┬───────────────┘└──────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     Output Deliverables                     │
+│    Technical Note (.docx) • Deck (.pptx) • Sheet (.xlsx)    │
+└─────────────────────────────────────────────────────────────┘
 
 ### Request Flow
 
@@ -237,13 +243,19 @@ ONPREMISIS/
 ├── backend/
 │   ├── __init__.py
 │   ├── config.py
+│   ├── engine.py
 │   ├── inference.py
 │   ├── knowledge_base.py
+│   ├── main.py
 │   ├── model_manager.py
 │   ├── model_registry.yaml
 │   ├── multimodal_vision.py
+│   ├── network_guard.py
 │   ├── router.py
+│   ├── scenarios.py
+│   ├── tools.py
 │   ├── data/
+│   ├── document_generator/
 │   └── test/
 │
 ├── frontend/
@@ -258,8 +270,8 @@ ONPREMISIS/
 │   ├── public/
 │   ├── .gitignore
 │   ├── .oxlintrc.json
+│   ├── index.html
 │   ├── README.md
-│   ├── vite.config.js
 │   ├── package.json
 │   ├── package-lock.json
 │   └── vite.config.js
@@ -579,10 +591,9 @@ The architecture and feature set may change as the project evolves toward the fi
 
 ## Team Details
 
-**Devansh Kumar Verma:** Backend & Agentic Ai  
-**Aarushi Kumari:** Backend & Generative Ai  
-**Shalvi Singh:** Research & Development
-**Udit Deep:** Network & Generative Ai
-**Pratham Raj:** Frontend
-**Tripti Kashyap:** Frontend
-
+- **Devansh Kumar Verma:** Backend & Agentic AI
+- **Aarushi Kumari:** Backend & Generative AI
+- **Shalvi Singh:** Research & Development
+- **Udit Deep:** Network & Generative AI
+- **Pratham Raj:** Frontend
+- **Tripti Kashyap:** Frontend
