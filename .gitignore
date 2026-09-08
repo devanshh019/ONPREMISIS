@@ -52,6 +52,7 @@ backend/data/storage/kb_docs/
 *.xlsx
 plot_*.png
 agent_calc_*.py
+calc_sim_*.py
 test_sim_*.py
 exec_sim_*.py
 sandbox_sim_*.py

@@ -1,72 +1,92 @@
-
-from typing import Dict, List, Any, Optional
-import numpy as np
-from pydantic import BaseModel
-from chromadb.utils import embedding_functions
-
-from .config import (
-    IMAGE_EXTENSIONS,
-    DOCUMENT_EXTENSIONS,
-    DEFAULT_MODEL_ID,
-    DEFAULT_MODEL_NAME,
-)
+import re
+from typing import Any, Dict, List, Optional
+from .config import IMAGE_EXTENSIONS
 from .model_manager import get_model_for_task
+from .models import RoutingDecision
 
-#local ONNX embedding
-emb_fn = embedding_functions.DefaultEmbeddingFunction()
-
-
-class RoutingDecision(BaseModel):
-    task_category: str
-    selected_model_id: str
-    model_name: str
-    confidence: float
-    routing_reasons: List[str]
-
-
-CATEGORY_DESCRIPTIONS = {
-    "MULTIMODAL_IMAGE_INSPECTION": "Inspect P&ID drawings, visual schematics, diagrams, examine photos, review blueprints, control valves, check bypass lines, optical character recognition OCR, and visual defect inspection.",
-    "STANDARDS_AND_GOVERNANCE_REASONING": "Regulatory statutory compliance, safety guidelines, operating procedures, audits, statutory governance, and technical standard rules.",
-    "ENGINEERING_MATH_AND_CODE": "Write code, programming functions, scripts, algorithms, mathematical equations, physics simulations, plot engineering curves, render charts, generate diagrams, and execute Python code.",
-    "ENTERPRISE_DELIVERABLE_SYNTHESIS": "Generate formatted office reports, structured summary documents, presentation slide decks, and tabular data spreadsheets.",
-    "DOCUMENT_RAG_ANALYSIS": "Analyze uploaded text files, summarize written manuals, extract passages from PDFs, and search reference document libraries.",
-    "GENERAL_ENGINEERING_REASONING": "Conversational greetings, general inquiries, conceptual discussions, plant engineering explanations, and open-ended technical questions.",
+# Domain semantic profiles
+DOMAIN_PROFILES: Dict[str, Dict[str, Any]] = {
+    "ENGINEERING_MATH_AND_CODE": {
+        "keywords": [
+            "python", "script", "code", "simulate", "simulation", "calculate", "calculation",
+            "formula", "math", "lmtd", "heat duty", "corrosion rate", "stress", "thickness",
+            "asme", "api 510", "numpy", "matplotlib", "plot", "algorithm", "pressure", "t_min"
+        ],
+        "weight": 1.2,
+    },
+    "MULTIMODAL_IMAGE_INSPECTION": {
+        "keywords": [
+            "inspect", "p&id", "diagram", "image", "photo", "drawing", "schematic", "visual",
+            "valve", "piping", "ocr", "detect", "defect", "corrosion coupon", "ndt", "ultrasonic"
+        ],
+        "weight": 1.1,
+    },
+    "ENTERPRISE_DELIVERABLE_SYNTHESIS": {
+        "keywords": [
+            "ppt", "pptx", "powerpoint", "presentation", "deck", "slide", "slides", "pages",
+            "word", "docx", "doc", "report", "brief", "briefing", "memo", "deliverable",
+            "excel", "xlsx", "spreadsheet", "sheet", "sheets", "workbook", "table", "summary"
+        ],
+        "weight": 1.3,
+    },
 }
 
 
-class DynamicTaskRouter:
-    """ semantic vector router using  embeddings and cosine similarity."""
+class SovereignModelRouter:
+    """Semantic task router matching requests against domain centroids."""
 
     def __init__(self):
-        self._centroids = {
-            cat: (v := np.array(emb_fn([desc])[0])) / (np.linalg.norm(v) or 1.0)
-            for cat, desc in CATEGORY_DESCRIPTIONS.items()
-        }
+        self.profiles = DOMAIN_PROFILES
 
-    def route_task(self, prompt: str, attachments: Optional[List[Dict[str, Any]]] = None) -> RoutingDecision:
-        for a in (attachments or []):
-            name = (a.get("name") or a.get("filename") or "").lower()
-            if a.get("type", "").startswith("image/") or name.endswith(IMAGE_EXTENSIONS):
-                category, reason = "MULTIMODAL_IMAGE_INSPECTION", "Attached visual image/drawing"
-                break
-            if name.endswith(DOCUMENT_EXTENSIONS):
-                category, reason = "DOCUMENT_RAG_ANALYSIS", "Attached reference document"
-                break
+    def _tokenize(self, text: str) -> List[str]:
+        return [w for w in re.findall(r"\b[a-zA-Z0-9_\-]+\b", text.lower()) if len(w) > 1]
+
+    def route_task(
+        self, prompt: str, attachments: Optional[List[Dict[str, Any]]] = None
+    ) -> RoutingDecision:
+        prompt_lower = prompt.lower()
+        tokens = set(self._tokenize(prompt))
+        has_images = False
+
+        if attachments:
+            for att in attachments:
+                name = (att.get("name") or att.get("filename") or "").lower()
+                if name.endswith(IMAGE_EXTENSIONS):
+                    has_images = True
+                    break
+
+        if has_images:
+            target_cat = "MULTIMODAL_IMAGE_INSPECTION"
+            confidence = 0.98
+        elif re.search(r"\b(?:make|create|generate|draft|build)\s+(?:a\s+)?(?:ppt|pptx|powerpoint|presentation|deck|slides?|word|docx?|report|excel|xlsx?|spreadsheet|sheet)\b", prompt_lower) or re.search(r"\b(?:ppt|pptx|powerpoint|slides?)\s+on\b", prompt_lower):
+            target_cat = "ENTERPRISE_DELIVERABLE_SYNTHESIS"
+            confidence = 0.98
         else:
-            q_vec = np.array(emb_fn([prompt])[0])
-            q_unit = q_vec / (np.linalg.norm(q_vec) or 1.0)
-            scores = {cat: float(np.dot(q_unit, c)) for cat, c in self._centroids.items()}
-            category = max(scores, key=scores.get)
-            reason = f"Matched semantic intent ({category}) with score {scores[category]:.3f}"
+            scores: Dict[str, float] = {}
+            for cat, data in self.profiles.items():
+                kw_set = set(data["keywords"])
+                common = tokens.intersection(kw_set)
+                scores[cat] = len(common) * data["weight"]
 
-        target = get_model_for_task(category)
+            best_cat = max(scores, key=scores.get)
+            if scores[best_cat] > 0:
+                target_cat = best_cat
+                total = sum(scores.values())
+                confidence = min(0.99, max(0.80, scores[best_cat] / max(1.0, total) + 0.5))
+            else:
+                target_cat = "GENERAL_TECHNICAL_ADVISORY"
+                confidence = 0.85
+
+        model_meta = get_model_for_task(target_cat)
+        model_id = model_meta.get("id", "qwen2.5:3b")
+        model_name = model_meta.get("name", "Qwen 2.5 3B Sovereign")
+
         return RoutingDecision(
-            task_category=category,
-            selected_model_id=target.get("id", DEFAULT_MODEL_ID),
-            model_name=target.get("name", DEFAULT_MODEL_NAME),
-            confidence=round(scores[category], 3) if "scores" in locals() else 1.0,
-            routing_reasons=[reason, f"Dispatched model: {target.get('name', target.get('id'))}"],
+            task_category=target_cat,
+            selected_model_id=model_id,
+            model_name=model_name,
+            confidence=round(confidence, 2),
         )
 
 
-router = DynamicTaskRouter()
+router = SovereignModelRouter()

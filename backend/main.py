@@ -1,45 +1,53 @@
-# FastAPI Gateway Server and REST API Endpoints
+import json
 import os
+import shutil
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from typing import Any, Dict, List, Optional
+
+import yaml
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from .config import (
-    APP_NAME,
-    APP_TITLE,
-    APP_VERSION,
-    HOST,
-    PORT,
-    STORAGE_DIR,
-    UPLOADS_DIR,
-    KB_DOCS_DIR,
-    FRONTEND_DIST_DIR,
-    DEFAULT_MODEL_NAME,
-    DEFAULT_MODEL_ID,
-    CONFIDENTIAL_TAG,
-)
-
-
-from .network_guard import sentinel
-from .model_manager import load_models, save_model, get_active_model, set_active_model
-from .router import router
-from .inference import inference_engine
+from .config import DATA_DIR, STORAGE_DIR, MODELS_YAML_PATH, FRONTEND_DIST_DIR, DEFAULT_MODEL_ID, HOST, PORT, APP_NAME, APP_TITLE, APP_VERSION, CONFIDENTIAL_TAG
 from .engine import agent_engine
+from .inference import inference_engine
 from .knowledge_base import knowledge_base
+from .model_manager import get_active_model, load_models, save_model, set_active_model
+from .models import ApprovalRequest, TaskExecuteRequest, ModelSelectRequest
+from .network_guard import sentinel
+from .router import router
 from .scenarios import PRELOADED_SCENARIOS
+
+
+class RouteTestRequest(BaseModel):
+    prompt: str
+    attachments: Optional[List[Dict[str, Any]]] = None
+
+
+class KBSearchRequest(BaseModel):
+    query: str
+    top_k: int = 3
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    status = sentinel.get_security_status()
+    print(f"[ONPREMISIS INITIALIZATION] Air-gap enforced: {status.get('air_gap_enforced', True)}.")
+    yield
+
 
 app = FastAPI(
     title=APP_TITLE,
-    description="Air-Gapped Local AI Workbench with zero cloud egress.",
+    description="Air-Gapped Sovereign ReAct Agent Platform with LangGraph & Hybrid RAG",
     version=APP_VERSION,
+    lifespan=lifespan,
 )
 
-# Enable CORS for local development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -49,187 +57,31 @@ app.add_middleware(
 )
 
 
-# -----------------------------------------------------------------------------
-# Request Models
-# -----------------------------------------------------------------------------
-class TaskExecuteRequest(BaseModel):
-    prompt: str
-    override_model: Optional[str] = None
-    attachments: Optional[List[Dict[str, Any]]] = None
-    history: Optional[List[Dict[str, str]]] = None
+# ---------------------------------------------------------------------------
+# Health & Status
+# ---------------------------------------------------------------------------
 
-
-class RouteTestRequest(BaseModel):
-    prompt: str
-    attachments: Optional[List[Dict[str, Any]]] = None
-
-
-class SelectModelRequest(BaseModel):
-    model_id: str
-
-
-class RegisterModelRequest(BaseModel):
-    id: str
-    name: Optional[str] = None
-    capabilities: Optional[List[str]] = []
-    default: Optional[bool] = False
-
-
-class KBSearchRequest(BaseModel):
-    query: str
-    top_k: int = 3
-
-
-# -----------------------------------------------------------------------------
-# Core System Endpoints
-# -----------------------------------------------------------------------------
 @app.get("/api/health")
 def get_health():
-    """Returns local system health, air-gap status, and Ollama connectivity."""
-    ollama_info = inference_engine.check_local_ollama_health()
-    active = get_active_model()
+    sec = sentinel.get_security_status()
+    inf = inference_engine.check_local_ollama_health()
+    kb_stats = knowledge_base.get_stats()
+    act = get_active_model()
     return {
         "status": "HEALTHY",
-        "air_gap_verified": True,
+        "air_gap_enforced": sec.get("air_gap_enforced", True),
+        "air_gap_verified": sec.get("air_gap_enforced", True),
+        "local_inference": "ONLINE" if inf.get("available") else "OFFLINE",
+        "inference_info": inf,
+        "ollama_backend": inf,
+        "active_foundation_model": act.get("name", "Qwen 2.5 3B Sovereign") if act else "Qwen 2.5 3B Sovereign",
+        "active_model_id": act.get("id", "qwen2.5:3b") if act else "qwen2.5:3b",
+        "active_model": act,
+        "knowledge_base": kb_stats,
         "organization": APP_NAME,
         "security_classification": CONFIDENTIAL_TAG,
-        "active_foundation_model": active.get("name", DEFAULT_MODEL_NAME),
-        "active_model_id": active.get("id", DEFAULT_MODEL_ID),
-        "ollama_backend": ollama_info,
-        "engine_mode": "SOVEREIGN_AIR_GAPPED_LOCAL",
+        "engine_mode": "LangGraph StateGraph (ReAct)",
     }
-
-
-@app.get("/api/models")
-def list_models():
-    """Lists models configured in model.yaml and models detected in Ollama."""
-    ollama_info = inference_engine.check_local_ollama_health()
-    configured_models = load_models()
-    active = get_active_model()
-    return {
-        "models": configured_models,
-        "active_model": active,
-        "detected_models": ollama_info.get("models", []),
-    }
-
-
-@app.post("/api/models/register")
-def register_model_endpoint(req: RegisterModelRequest):
-    """Registers or updates a model in model.yaml directly."""
-    model_entry = {
-        "id": req.id.strip(),
-        "name": (req.name or req.id).strip(),
-        "capabilities": req.capabilities or [],
-        "default": req.default or False,
-    }
-    updated_models = save_model(model_entry)
-    sentinel.record_audit_event(
-        event_type="MODEL_REGISTERED",
-        severity="INFO",
-        details=f"Registered model {req.id} in model.yaml",
-        metadata={"model_id": req.id, "capabilities": req.capabilities},
-    )
-    return {
-        "success": True,
-        "models": updated_models,
-        "active_model": get_active_model(),
-    }
-
-
-@app.post("/api/models/select")
-def select_active_model(req: SelectModelRequest):
-    """Switches active model tag."""
-    inference_engine.set_target_model(req.model_id)
-    sentinel.record_audit_event(
-        event_type="MODEL_SELECTED",
-        severity="INFO",
-        details=f"Selected active local model: {req.model_id}",
-        metadata={"model_id": req.model_id},
-    )
-    return {"success": True, "active_model": get_active_model()}
-
-
-
-@app.post("/api/route")
-def test_routing(req: RouteTestRequest):
-    """Tests task routing and persona dispatch."""
-    decision = router.route_task(req.prompt, req.attachments)
-    data = decision.model_dump()
-    health = inference_engine.check_local_ollama_health()
-    installed = health.get("models", [])
-    target = decision.selected_model_id
-    is_fallback = bool(installed and target not in installed)
-    if is_fallback:
-        default_candidate = get_active_model().get("id", DEFAULT_MODEL_ID)
-        if default_candidate in installed:
-            active = default_candidate
-        elif DEFAULT_MODEL_ID in installed:
-            active = DEFAULT_MODEL_ID
-        elif installed:
-            active = installed[0]
-        else:
-            active = DEFAULT_MODEL_ID
-    else:
-        active = target
-
-    data["is_fallback"] = is_fallback
-    data["requested_model"] = target
-    data["active_model"] = active
-    if is_fallback:
-        data["fallback_message"] = f"Model '{target}' was not available in local Ollama, currently executing on fallback model '{active}'."
-    return data
-
-
-@app.post("/api/upload")
-async def upload_attachment(file: UploadFile = File(...)):
-    """Uploads user attachments (images, PDFs, documents) for task execution."""
-    timestamp = int(time.time() * 1000)
-    safe_filename = f"{timestamp}_{file.filename}"
-    file_path = UPLOADS_DIR / safe_filename
-
-    contents = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(contents)
-
-    ext = file_path.suffix.lower()
-    return {
-        "success": True,
-        "filename": file.filename,
-        "saved_filename": safe_filename,
-        "path": f"/api/artifacts/uploads/{safe_filename}",
-        "local_path": str(file_path),
-        "file_type": ext.replace(".", ""),
-        "size_bytes": len(contents),
-    }
-
-
-@app.post("/api/agent/execute")
-def execute_agent_task(req: TaskExecuteRequest):
-    """Executes end-to-end task workflow (routing, RAG, inference, code, docs)."""
-    if not req.prompt.strip() and not req.attachments:
-        raise HTTPException(status_code=400, detail="Prompt or attachment required.")
-
-    return agent_engine.execute_task(
-        prompt=req.prompt,
-        attachments=req.attachments,
-        override_model=req.override_model,
-        history=req.history,
-    )
-
-
-# -----------------------------------------------------------------------------
-# Security & Telemetry Endpoints
-# -----------------------------------------------------------------------------
-@app.get("/api/security/status")
-def get_security_telemetry():
-    """Returns real-time air-gap telemetry and SHA-256 audit log."""
-    return sentinel.get_security_status()
-
-
-@app.get("/api/security/certificate")
-def get_sovereign_certificate():
-    """Generates cryptographic compliance certificate."""
-    return sentinel.generate_sovereign_certificate()
 
 
 @app.get("/api/scenarios")
@@ -238,71 +90,100 @@ def get_scenarios():
     return {"scenarios": PRELOADED_SCENARIOS}
 
 
-# -----------------------------------------------------------------------------
-# Knowledge Base (RAG) Endpoints
-# -----------------------------------------------------------------------------
-@app.post("/api/knowledge-base/upload")
-async def upload_kb_document(file: UploadFile = File(...)):
-    """Uploads and indexes a document directly into the local RAG pipeline."""
-    temp_path = KB_DOCS_DIR / f"temp_{file.filename}"
-    contents = await file.read()
+@app.post("/api/route")
+def test_route(req: RouteTestRequest):
+    """Evaluates task intent, attachment features, and selects specialized model persona."""
+    decision = router.route_task(req.prompt, req.attachments)
+    data = decision.model_dump()
 
-    with open(temp_path, "wb") as f:
-        f.write(contents)
+    inf = inference_engine.check_local_ollama_health()
+    installed = inf.get("models", [])
+    target = decision.selected_model_id
+    is_fallback = bool(installed and target not in installed)
 
-    try:
-        res = knowledge_base.ingest_file(temp_path, original_filename=file.filename)
-        sentinel.record_audit_event(
-            event_type="RAG_DOCUMENT_INGESTED",
-            severity="INFO",
-            details=f"Indexed '{file.filename}' into RAG ({res['indexed_chunks']} chunks).",
-            metadata={"filename": file.filename, "chunks": res["indexed_chunks"]},
+    if is_fallback:
+        active = installed[0] if installed else DEFAULT_MODEL_ID
+    else:
+        active = target
+
+    data["is_fallback"] = is_fallback
+    data["requested_model"] = target
+    data["active_model"] = active
+    if is_fallback:
+        data["fallback_message"] = (
+            f"Requested '{target}' not found locally. Routing to active model '{active}'."
         )
-        return {
-            "success": True,
-            "filename": file.filename,
-            "doc_id": res["document"]["doc_id"],
-            "indexed_chunks": res["indexed_chunks"],
-            "document": res["document"],
-        }
+    return data
+
+
+# ---------------------------------------------------------------------------
+# LangGraph Agent Endpoints
+# ---------------------------------------------------------------------------
+
+@app.post("/api/agent/execute")
+def execute_task(req: TaskExecuteRequest):
+    try:
+        res = agent_engine.execute_task(
+            prompt=req.prompt,
+            attachments=req.attachments,
+            override_model=req.override_model,
+            history=req.history,
+        )
+        return res
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to index document: {str(e)}")
-    finally:
-        if temp_path.exists():
-            try:
-                os.remove(temp_path)
-            except Exception:
-                pass
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/knowledge-base/documents")
-def list_kb_documents():
-    """Lists indexed RAG documents and knowledge base statistics."""
-    return {
-        "documents": knowledge_base.list_documents(),
-        "stats": knowledge_base.get_stats(),
-    }
+@app.post("/api/agent/stream")
+def stream_task(req: TaskExecuteRequest):
+    def event_generator():
+        try:
+            for ev in agent_engine.stream_task(
+                prompt=req.prompt,
+                attachments=req.attachments,
+                override_model=req.override_model,
+                history=req.history,
+            ):
+                yield f"data: {json.dumps(ev)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
-@app.delete("/api/knowledge-base/documents/{doc_id}")
-def delete_kb_document(doc_id: str):
-    """Deletes a document and its chunks from the RAG index."""
-    success = knowledge_base.delete_document(doc_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Document not found in RAG index.")
-    return {"success": True, "deleted_doc_id": doc_id}
+@app.post("/api/agent/approve")
+def approve_deliverables(req: ApprovalRequest):
+    """Authorized supervisor sign-off releasing held deliverables when confidence < 85%."""
+    try:
+        res = agent_engine.approve_and_generate_deliverables(
+            task_id=req.task_id,
+            supervisor_name=req.supervisor_name or "Lead Plant Inspection Engineer",
+            decision_notes=req.decision_notes or "Approved.",
+            authorized=True,
+        )
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/knowledge-base/search")
-def search_kb(req: KBSearchRequest):
-    """Performs similarity search on local indexed standards."""
-    results = knowledge_base.search(req.query, top_k=req.top_k)
-    return {"results": results}
+@app.get("/api/agent/graph")
+def get_agent_graph():
+    """Returns the LangGraph StateGraph topology, phases, nodes, and transitions."""
+    return agent_engine.get_graph_topology()
 
 
-# -----------------------------------------------------------------------------
-# Static Artifacts & Frontend Serving
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# File & Document Downloads & Artifacts
+# ---------------------------------------------------------------------------
+
+@app.get("/api/documents/download/{filename}")
+def download_document(filename: str):
+    path = STORAGE_DIR / filename
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Deliverable '{filename}' not found.")
+    return FileResponse(path, filename=filename)
+
+
 @app.get("/api/artifacts/{path:path}")
 def get_artifact(path: str):
     """Serves generated Office deliverables, plots, and uploaded documents."""
@@ -333,6 +214,140 @@ def get_artifact(path: str):
     )
 
 
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...)):
+    target = STORAGE_DIR / file.filename
+    with open(target, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {
+        "success": True,
+        "filename": file.filename,
+        "local_path": str(target),
+        "size_bytes": target.stat().st_size,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Knowledge Base (Hybrid RAG) Endpoints
+# ---------------------------------------------------------------------------
+
+@app.post("/api/knowledge-base/upload")
+@app.post("/api/rag/upload")
+async def rag_upload(file: UploadFile = File(...)):
+    target = STORAGE_DIR / file.filename
+    with open(target, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    try:
+        res = knowledge_base.ingest_file(target, original_filename=file.filename)
+        return {
+            "success": True,
+            "filename": file.filename,
+            "doc_id": res.get("document", {}).get("doc_id"),
+            "indexed_chunks": res.get("indexed_chunks", 0),
+            "document": res.get("document"),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/knowledge-base/documents")
+def list_kb_documents():
+    return {
+        "documents": knowledge_base.list_documents(),
+        "stats": knowledge_base.get_stats(),
+    }
+
+
+@app.get("/api/rag/documents")
+def rag_list_documents():
+    return {"documents": knowledge_base.list_documents()}
+
+
+@app.delete("/api/knowledge-base/documents/{doc_id}")
+@app.delete("/api/rag/documents/{doc_id}")
+def rag_delete_document(doc_id: str):
+    success = knowledge_base.delete_document(doc_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Document not found.")
+    return {"success": True, "doc_id": doc_id, "deleted_doc_id": doc_id}
+
+
+@app.post("/api/knowledge-base/search")
+def search_kb(req: KBSearchRequest):
+    results = knowledge_base.search(query=req.query, top_k=req.top_k)
+    return {"results": results}
+
+
+@app.get("/api/rag/search")
+def rag_search(q: str, top_k: int = 3):
+    results = knowledge_base.search(query=q, top_k=top_k)
+    return {"query": q, "results": results}
+
+
+@app.get("/api/rag/stats")
+def rag_stats():
+    return knowledge_base.get_stats()
+
+
+# ---------------------------------------------------------------------------
+# Air-Gap Security Sentinel Endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/api/security/status")
+def get_security_status():
+    return sentinel.get_security_status()
+
+
+@app.get("/api/security/audit-chain")
+def get_audit_chain(limit: int = 50):
+    return {"audit_events": sentinel.get_audit_chain(limit=limit)}
+
+
+@app.get("/api/security/certificate")
+def get_sovereign_certificate():
+    return sentinel.generate_sovereign_certificate()
+
+
+# ---------------------------------------------------------------------------
+# Model Registry Endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/api/models")
+def get_models():
+    ollama_info = inference_engine.check_local_ollama_health()
+    configured_models = load_models()
+    active = get_active_model()
+    return {
+        "models": configured_models,
+        "active_model": active,
+        "detected_models": ollama_info.get("models", []),
+    }
+
+
+@app.post("/api/models/select")
+def select_model(req: ModelSelectRequest):
+    set_active_model(req.model_id)
+    models = load_models()
+    for m in models:
+        m["default"] = (m["id"] == req.model_id)
+    try:
+        with open(MODELS_YAML_PATH, "w", encoding="utf-8") as f:
+            yaml.safe_dump({"models": models}, f, sort_keys=False)
+    except Exception:
+        pass
+    return {"success": True, "active_model_id": req.model_id, "active_model": get_active_model()}
+
+
+@app.post("/api/models/register")
+def register_model(model_data: Dict[str, Any]):
+    models = save_model(model_data)
+    return {"success": True, "models": models}
+
+
+# ---------------------------------------------------------------------------
+# Frontend Static Files Mount
+# ---------------------------------------------------------------------------
+
 if FRONTEND_DIST_DIR.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIST_DIR), html=True), name="static")
 
@@ -340,4 +355,3 @@ if FRONTEND_DIST_DIR.exists():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=HOST, port=PORT)
-

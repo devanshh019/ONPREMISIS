@@ -18,6 +18,7 @@ export default function ChatArea({
   healthData,
   onExpandImage,
   currentSessionId,
+  onSupervisorApproval,
 }) {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -100,6 +101,7 @@ export default function ChatArea({
               selectedDeliverable={selectedDeliverable}
               onSelectDeliverable={onSelectDeliverable}
               onExpandImage={onExpandImage}
+              onSupervisorApproval={onSupervisorApproval}
             />
           ))
         )}

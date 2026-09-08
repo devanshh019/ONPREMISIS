@@ -160,6 +160,7 @@ export default function App() {
       .then(data => {
         const assistantMsg = {
           id: Date.now() + 1,
+          task_id: data.task_id,
           role: 'assistant',
           content: data.summary,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -174,7 +175,13 @@ export default function App() {
           sandbox_output: data.sandbox_output,
           scratchpad: data.scratchpad,
           sovereign_proof: data.sovereign_proof,
-          elapsed_seconds: data.elapsed_seconds
+          elapsed_seconds: data.elapsed_seconds,
+          confidence_score: data.confidence_score,
+          confidence_percent: data.confidence_percent,
+          confidence_metrics: data.confidence_metrics,
+          requires_human_approval: data.requires_human_approval,
+          approval_status: data.approval_status,
+          qa_gate_passed: data.qa_gate_passed,
         };
 
         if (targetSessionId === currentSessionId && data.artifacts && data.artifacts.length > 0) {
@@ -208,6 +215,47 @@ export default function App() {
       .finally(() => {
         setLoadingSessionId(null);
       });
+  };
+
+  const handleSupervisorApproval = async (taskId, msgId) => {
+    try {
+      const res = await fetch('/api/agent/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task_id: taskId,
+          supervisor_name: 'Lead Plant Inspection Engineer',
+          decision_notes: 'Formally verified against statutory refinery codes. Approved for operational release.'
+        })
+      });
+      if (res.ok) {
+        const approvalData = await res.json();
+        chatSessions.setSessions(prev => prev.map(s => ({
+          ...s,
+          messages: s.messages.map(m => {
+            if (m.id === msgId || (taskId && m.task_id === taskId)) {
+              const updatedArtifacts = approvalData.artifacts && approvalData.artifacts.length > 0
+                ? approvalData.artifacts
+                : m.artifacts;
+              return {
+                ...m,
+                requires_human_approval: false,
+                approval_status: 'SUPERVISOR_APPROVED',
+                artifacts: updatedArtifacts
+              };
+            }
+            return m;
+          })
+        })));
+        if (approvalData.artifacts && approvalData.artifacts.length > 0) {
+          setSelectedDeliverable(approvalData.artifacts[0]);
+          setRightPanelOpen(true);
+        }
+        api.fetchSecurityData();
+      }
+    } catch (e) {
+      console.error('Supervisor approval error:', e);
+    }
   };
 
   const handleSelectDeliverable = (art) => {
@@ -259,6 +307,7 @@ export default function App() {
           healthData={api.healthData}
           onExpandImage={(imgUrl) => setExpandedImage(imgUrl)}
           currentSessionId={currentSessionId}
+          onSupervisorApproval={handleSupervisorApproval}
         />
 
         <ChatInput

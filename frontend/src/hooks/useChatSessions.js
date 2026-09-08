@@ -74,8 +74,16 @@ export default function useChatSessions() {
     }));
   };
 
+  const updateMessageInSession = (messageId, updates) => {
+    setSessions(prev => prev.map(s => ({
+      ...s,
+      messages: s.messages.map(m => (m.id === messageId || (updates.task_id && m.task_id === updates.task_id)) ? { ...m, ...updates } : m)
+    })));
+  };
+
   return {
     sessions,
+    setSessions,
     currentSessionId,
     setCurrentSessionId,
     currentSession,
@@ -83,6 +91,7 @@ export default function useChatSessions() {
     handleNewChat,
     handleDeleteSession,
     addMessageToSession,
+    updateMessageInSession,
     updateSessionTitle,
   };
 }

@@ -3,6 +3,10 @@ import { X } from 'lucide-react';
 export default function ImageLightbox({ imageUrl, onClose }) {
   if (!imageUrl) return null;
 
+  const resolvedUrl = imageUrl && !imageUrl.startsWith('/api/') && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')
+    ? `/api/artifacts/${imageUrl.split('/').pop()}`
+    : imageUrl;
+
   return (
     <div
       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-60 flex items-center justify-center p-4"
@@ -19,7 +23,17 @@ export default function ImageLightbox({ imageUrl, onClose }) {
         >
           <X className="w-4 h-4" />
         </button>
-        <img src={imageUrl} alt="Expanded visualization" className="max-h-[85vh] max-w-full object-contain rounded" />
+        <img
+          src={resolvedUrl}
+          alt="Expanded visualization"
+          className="max-h-[85vh] max-w-full object-contain rounded"
+          onError={(e) => {
+            const fn = imageUrl.split('/').pop();
+            if (fn && !e.target.src.includes(`/api/artifacts/${fn}`)) {
+              e.target.src = `/api/artifacts/${fn}`;
+            }
+          }}
+        />
       </div>
     </div>
   );

@@ -1,51 +1,66 @@
+"""
+ONPREMISIS Sovereign Backend Configuration
+==========================================
+Centralized settings for air-gapped agent workbench with zero cloud egress.
+"""
+
 import os
 from pathlib import Path
 
-
-#DIR CONFIG
-BASE_DIR = Path(__file__).resolve().parent  #Backend Root Path
-PROJECT_ROOT = BASE_DIR.parent #Proj Root Path
-DATA_DIR = BASE_DIR / "data"  #Dir to handle all data files
-SEED_DOCS_DIR = DATA_DIR / "seed_documents"  # standard documents for KB
-STORAGE_DIR = DATA_DIR / "storage"   #Store Files Generated As Per User Request
-UPLOADS_DIR = STORAGE_DIR / "uploads"  #Stores Files Uploaded by user
-KB_DOCS_DIR = STORAGE_DIR / "kb_docs" #Store Files Added By User To Kb
-CHROMA_DIR = STORAGE_DIR / "chroma_db"  #Vec Store
-FRONTEND_DIST_DIR = PROJECT_ROOT / "frontend" / "dist" #Frontend Path
+# Base Paths
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
+DATA_DIR = BASE_DIR / "data"
+STORAGE_DIR = DATA_DIR / "storage"
+SEED_DOCS_DIR = DATA_DIR / "seed_documents"
+UPLOADS_DIR = STORAGE_DIR / "uploads"
+KB_DOCS_DIR = STORAGE_DIR / "kb_docs"
+CHROMA_DIR = STORAGE_DIR / "chroma_db"
+AUDIT_LOG_FILE = DATA_DIR / "audit_chain.jsonl"
 ON_PREMISES_CACHE_DIR = STORAGE_DIR / "on_premises_cache"
 MODELS_YAML_PATH = BASE_DIR / "model_registry.yaml"
-for dr in [DATA_DIR, SEED_DOCS_DIR, STORAGE_DIR, UPLOADS_DIR, KB_DOCS_DIR, CHROMA_DIR,ON_PREMISES_CACHE_DIR]:
+FRONTEND_DIST_DIR = PROJECT_ROOT / "frontend" / "dist"
+
+# Ensure runtime directories exist
+for dr in [DATA_DIR, SEED_DOCS_DIR, STORAGE_DIR, UPLOADS_DIR, KB_DOCS_DIR, CHROMA_DIR, ON_PREMISES_CACHE_DIR]:
     dr.mkdir(parents=True, exist_ok=True)
 
+# Air-gapped on-premises environment
+os.environ["SENTENCE_TRANSFORMERS_HOME"] = str(ON_PREMISES_CACHE_DIR)
+os.environ["HF_HOME"] = str(ON_PREMISES_CACHE_DIR)
+os.environ["MPLCONFIGDIR"] = str(ON_PREMISES_CACHE_DIR)
 
-#APP CONFIG
-APP_NAME='ONPREMISIS'
-APP_VERSION='1.0.0'
-APP_TITLE='Your AI. Your hardware. No cloud.'
-HOST='127.0.0.1'
-PORT = 8000
+# App Metadata & Themes
+APP_NAME = "ONPREMISIS Sovereign Agent Workbench"
+APP_VERSION = "2.0.0"
+APP_TITLE = "Your AI. Your hardware. No cloud."
+ORGANIZATION_NAME = "ONPREMISIS SOVEREIGN AI"
+CONFIDENTIAL_TAG = "CONFIDENTIAL // STRICT AIR-GAP"
+HOST = "127.0.0.1"
+PORT = int(os.environ.get("PORT", 8000))
+AUDIT_ROOT_SEED_PREFIX = os.environ.get("AUDIT_ROOT_SEED_PREFIX", "SOVEREIGN_GENESIS_ROOT")
 
-#OLLAMA SETTINGS
-OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-OLLAMA_TIMEOUT_SECONDS = 180.0  #Response Timeout Limit
-OLLAMA_HEALTH_TIMEOUT_SECONDS = 1.0 #health check timeout limit
-DEFAULT_MODEL_ID = "gemma3:4b"
-DEFAULT_MODEL_NAME = "GEMMA3 - 4B"
-MODEL_TEMPERATURE = 0.2 
-MODEL_TOP_P = 0.85 #Forces Ollama to use token with prob above 85%
-MODEL_CONTEXT_WINDOW = 4096
-MAX_HISTORY_TURNS = 10 #Last 10 Chat history Used for context of chat
+# ReAct & QA Confidence Threshold
+CONFIDENCE_THRESHOLD = 0.85
+MAX_REACT_ITERATIONS = int(os.environ.get("MAX_REACT_ITERATIONS", "5"))
 
-# RAG 
-RAG_CHUNK_SIZE = 1000
-RAG_CHUNK_OVERLAP = 200
+# Local Knowledge Base (RAG)
+CHROMA_COLLECTION_NAME = os.environ.get("CHROMA_COLLECTION_NAME", "onpremisis_standards")
+RAG_CHUNK_SIZE = 600
+RAG_CHUNK_OVERLAP = 100
 RAG_DEFAULT_TOP_K = 3
-CHROMA_COLLECTION_NAME = os.environ.get("CHROMA_COLLECTION_NAME", "ONPREMISIS_KB")  # Chroma Collection Name
 
-#File Format
-MAX_REACT_ITERATIONS = int(os.environ.get("MAX_REACT_ITERATIONS", "3"))
-IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff")
-DOCUMENT_EXTENSIONS = (".pdf", ".docx",  ".txt", ".csv", ".xlsx", ".pptx", ".md")
-AUDIT_ROOT_SEED_PREFIX = os.environ.get("AUDIT_ROOT_SEED_PREFIX", f"{APP_NAME}_ROOT")
-ORGANIZATION_NAME = os.environ.get("ORGANIZATION_NAME", "ONPREMISIS")
-CONFIDENTIAL_TAG = os.environ.get("CONFIDENTIAL_TAG", "CONFIDENTIAL")
+# Local Inference Defaults
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+OLLAMA_TIMEOUT_SECONDS = 180.0
+OLLAMA_HEALTH_TIMEOUT_SECONDS = 2.0
+DEFAULT_MODEL_ID = "qwen2.5:3b"
+DEFAULT_MODEL_NAME = "Qwen 2.5 3B Sovereign"
+MODEL_TEMPERATURE = 0.2
+MODEL_TOP_P = 0.9
+MODEL_CONTEXT_WINDOW = 8192
+MAX_HISTORY_TURNS = 10
+
+# File Formats
+IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tiff")
+DOCUMENT_EXTENSIONS = (".pdf", ".docx", ".txt", ".csv", ".xlsx", ".pptx", ".md")

@@ -29,6 +29,7 @@ def _build_harness(user_code: str, plot_path: Path) -> str:
         "import matplotlib\n"
         "matplotlib.use('Agg')\n"
         "import matplotlib.pyplot as plt\n"
+        "plt.show = lambda *a, **k: None\n"
         "import numpy as np\n\n"
         f"_plot_path = {str(plot_path)!r}\n"
         "_orig_savefig = plt.savefig\n"
@@ -90,7 +91,7 @@ class PyExecutor:
 
             return CodeDeliverable(
                 filename=output_path.name,
-                path=str(output_path),
+                path=f"/api/artifacts/{output_path.name}",
                 size_bytes=os.path.getsize(output_path),
                 execution=draft_result,
             )
