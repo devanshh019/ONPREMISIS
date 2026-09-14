@@ -124,8 +124,17 @@ class SovereignAgentEngine:
     def _deliverable_directive(is_ppt: bool, is_word: bool, is_excel: bool, is_code: bool) -> str:
         if is_ppt:
             return (
-                "The user requested a PowerPoint presentation. Invoke `generate_powerpoint_presentation` with title and slides.\n"
-                'Format:\nAction: generate_powerpoint_presentation\nAction Input: {"title": "...", "slides": [{"title": "...", "bullets": [...]}]}'
+                "The user requested a PowerPoint presentation. Invoke `generate_powerpoint_presentation` with title, subtitle, and comprehensive slides.\n"
+                "CRITICAL PRESENTATION REQUIREMENTS:\n"
+                "- Do NOT output only brief or shallow bullet points.\n"
+                "- Each slide MUST be substantive and include:\n"
+                "  * title: Clear descriptive slide title\n"
+                "  * subtitle: (Optional) Topic or component tag\n"
+                "  * definition: Formal engineering or statutory definition of the standard, formula, or concept analyzed\n"
+                "  * explanation: Detailed multi-sentence technical narrative explaining the operational rationale, analysis, methodology, and engineering context\n"
+                "  * bullets: Detailed supporting points, parameters, or findings formatted with bold lead-ins (e.g. ['**Parameter**: Detailed description...'])\n"
+                "  * notes: (Optional) Speaker notes for executive briefing\n"
+                'Format:\nAction: generate_powerpoint_presentation\nAction Input: {"title": "...", "subtitle": "...", "slides": [{"title": "...", "subtitle": "...", "definition": "...", "explanation": "...", "bullets": ["**Key Finding**: Detailed explanation...", "..."], "notes": "..."}]}'
             )
         if is_word:
             return (
@@ -154,7 +163,9 @@ class SovereignAgentEngine:
         if name == "generate_powerpoint_presentation":
             slides = args.get("slides")
             return isinstance(slides, list) and len(slides) > 0 and all(
-                isinstance(s, dict) and str(s.get("title", "")).strip() and isinstance(s.get("bullets"), list)
+                isinstance(s, dict) and str(s.get("title", "")).strip() and (
+                    s.get("bullets") or s.get("explanation") or s.get("definition")
+                )
                 for s in slides
             )
         if name == "generate_excel_spreadsheet":
@@ -235,7 +246,7 @@ class SovereignAgentEngine:
             f"- search_knowledge_base: {{\"query\": \"...\", \"top_k\": 3}}\n"
             f"- execute_python_code: {{\"code\": \"...\"}}\n"
             f"- generate_word_document: {{\"title\": \"...\", \"sections\": [{{\"heading\": \"...\", \"content\": \"...\"}}]}}\n"
-            f"- generate_powerpoint_presentation: {{\"title\": \"...\", \"slides\": [{{\"title\": \"...\", \"bullets\": [...]}}]}}\n"
+            f"- generate_powerpoint_presentation: {{\"title\": \"...\", \"subtitle\": \"...\", \"slides\": [{{\"title\": \"...\", \"subtitle\": \"...\", \"definition\": \"...\", \"explanation\": \"...\", \"bullets\": [\"**Header**: Detailed explanation...\"], \"notes\": \"...\"}}]}}\n"
             f"- generate_excel_spreadsheet: {{\"title\": \"...\", \"headers\": [...], \"rows\": [[...]]}}\n"
             f"- inspect_visual_attachment: {{\"filename\": \"...\"}}\n\n"
             f"2. When all deliverables and calculations are done, conclude with:\n"

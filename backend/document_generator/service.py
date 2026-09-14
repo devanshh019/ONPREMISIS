@@ -36,6 +36,7 @@ class DocumentService:
         renderer_cls = self._RENDERERS[spec.doc_type]
         renderer = renderer_cls(self.theme)
         output_path = self._output_path(spec.title, spec.doc_type.value)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         return renderer.render(spec, output_path)
 
     def _output_path(self, title: str, ext: str) -> Path:

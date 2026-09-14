@@ -28,7 +28,11 @@ class DocType(str, Enum):
 # ---------------------------------------------------------------------------
 class SlideSpec(BaseModel):
     title: str
-    bullets: List[str] = Field(default_factory=list)
+    subtitle: Optional[str] = None
+    definition: Optional[str] = None
+    explanation: Optional[str] = None
+    bullets: Union[List[str], str] = Field(default_factory=list)
+    notes: Optional[str] = None
 
 
 class PptxSpec(BaseModel):
@@ -68,7 +72,7 @@ class XlsxSpec(BaseModel):
     title: str
     sheet_name: str = "Sheet1"
     headers: List[str]
-    rows: List[List[Union[str, int, float]]] = Field(default_factory=list)
+    rows: List[List[Any]] = Field(default_factory=list)
     rules: List[CellRule] = Field(default_factory=list)
 
 

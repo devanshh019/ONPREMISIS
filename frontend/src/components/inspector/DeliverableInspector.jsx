@@ -180,20 +180,39 @@ export default function DeliverableInspector({ artifact, onClose, onZoomImage })
             {slides.length > 0 ? (
               <>
                 <div className="p-3 bg-[#1c1917] rounded-md text-[#faf8f5]">
-                  <div className="text-[10px] font-mono uppercase text-[#ea580c] font-semibold">Presentation Slide</div>
+                  <div className="text-[10px] font-mono uppercase text-[#ea580c] font-semibold">
+                    {slides[activeSlide]?.subtitle || 'Presentation Slide'}
+                  </div>
                   <div className="text-xs font-bold text-white mt-0.5">{slides[activeSlide]?.title || `Slide ${activeSlide + 1}`}</div>
                 </div>
-                <div className="space-y-2 pt-1">
-                  <div className="text-[10px] font-mono uppercase text-[#78716c] font-semibold">Key Points:</div>
-                  <ul className="space-y-2 text-xs text-[#44403c] list-none leading-relaxed">
-                    {(slides[activeSlide]?.bullets || []).map((b, bIdx) => (
-                      <li key={bIdx} className="flex items-start space-x-2">
-                        <span className="text-[#ea580c] font-bold mt-0.5">•</span>
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+
+                {slides[activeSlide]?.definition && (
+                  <div className="p-2.5 bg-[#f1f5f9] rounded-md border-l-2 border-[#ea580c] text-xs text-[#1e293b]">
+                    <div className="text-[10px] font-mono uppercase font-semibold text-[#ea580c] mb-1">Definition & Standard Reference</div>
+                    <div className="leading-relaxed">{slides[activeSlide].definition}</div>
+                  </div>
+                )}
+
+                {slides[activeSlide]?.explanation && (
+                  <div className="p-2.5 bg-[#faf8f5] rounded-md border border-[#e5ded1] text-xs text-[#334155] leading-relaxed">
+                    <div className="text-[10px] font-mono uppercase font-semibold text-[#78716c] mb-1">Technical Analysis & Explanation</div>
+                    <div>{slides[activeSlide].explanation}</div>
+                  </div>
+                )}
+
+                {slides[activeSlide]?.bullets && (Array.isArray(slides[activeSlide].bullets) ? slides[activeSlide].bullets.length > 0 : Boolean(slides[activeSlide].bullets)) && (
+                  <div className="space-y-2 pt-1">
+                    <div className="text-[10px] font-mono uppercase text-[#78716c] font-semibold">Key Points & Specifications:</div>
+                    <ul className="space-y-2 text-xs text-[#44403c] list-none leading-relaxed">
+                      {(Array.isArray(slides[activeSlide]?.bullets) ? slides[activeSlide].bullets : [slides[activeSlide].bullets]).map((b, bIdx) => (
+                        <li key={bIdx} className="flex items-start space-x-2">
+                          <span className="text-[#ea580c] font-bold mt-0.5">•</span>
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </>
             ) : (
               <div className="p-6 text-center text-[#78716c] font-mono text-xs">

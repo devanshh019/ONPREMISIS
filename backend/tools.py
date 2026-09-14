@@ -115,7 +115,14 @@ def render_pending_deliverable(spec_dict: Dict[str, Any]) -> Optional[Dict[str, 
             subtitle = args.get("subtitle", "Industrial Evaluation")
             slides_input = args.get("slides", [])
             slides = [
-                SlideSpec(title=s.get("title", ""), bullets=s.get("bullets", []), notes=s.get("notes", ""))
+                SlideSpec(
+                    title=s.get("title", ""),
+                    subtitle=s.get("subtitle"),
+                    definition=s.get("definition"),
+                    explanation=s.get("explanation"),
+                    bullets=s.get("bullets", []),
+                    notes=s.get("notes", ""),
+                )
                 for s in slides_input
             ]
             pptx_spec = PptxSpec(title=title, subtitle=subtitle, slides=slides)
@@ -124,10 +131,13 @@ def render_pending_deliverable(spec_dict: Dict[str, Any]) -> Optional[Dict[str, 
             preview_slides = [
                 {
                     "title": s.get("title", "Technical Slide"),
-                    "bullets": s.get("bullets", []) or ["Technical evaluation and operational standards."],
+                    "subtitle": s.get("subtitle", ""),
+                    "definition": s.get("definition", ""),
+                    "explanation": s.get("explanation", ""),
+                    "bullets": s.get("bullets", []) if isinstance(s.get("bullets"), list) else [s.get("bullets")] if s.get("bullets") else ["Technical evaluation and operational standards."],
                 }
                 for s in slides_input
-            ] or [{"title": title, "bullets": [subtitle or "Industrial Evaluation"]}]
+            ] or [{"title": title, "subtitle": subtitle, "bullets": [subtitle or "Industrial Evaluation"]}]
 
             return {
                 "type": "presentation",
@@ -238,7 +248,10 @@ class SovereignToolRegistry:
 
         # 2. Python Isolated Sandbox
         def _exec_py(args: Dict[str, Any]) -> ToolResult:
-            code = _auto_print_last_expression(args.get("code", ""))
+            raw_code = args.get("code", "")
+            if not str(raw_code).strip():
+                return ToolResult(tool_name="execute_python_code", success=False, output="", error="No Python code provided.")
+            code = _auto_print_last_expression(raw_code)
             title = args.get("title", "calc_sim")
             safe_title = _sanitize_filename_component(title, fallback="calc_sim")
 
@@ -252,8 +265,10 @@ class SovereignToolRegistry:
             exec_res = deliv.execution
 
             deliverables = []
+            seen_plot_filenames = set()
             for p in exec_res.plots:
                 plot_fn = p.get("filename", f"plot_{int(time.time())}.png") if isinstance(p, dict) else Path(p).name
+                seen_plot_filenames.add(plot_fn)
                 local_file = STORAGE_DIR / plot_fn
                 sz = local_file.stat().st_size if local_file.exists() else 0
                 deliverables.append({
@@ -267,7 +282,7 @@ class SovereignToolRegistry:
             for af in exec_res.artifact_files:
                 af_path = Path(af)
                 af_name = af_path.name
-                if af_name != (p.get("filename") if isinstance(p, dict) else Path(p).name if exec_res.plots else ""):
+                if af_name not in seen_plot_filenames:
                     local_af = STORAGE_DIR / af_name
                     sz = local_af.stat().st_size if local_af.exists() else (af_path.stat().st_size if af_path.exists() else 0)
                     deliverables.append({
@@ -325,11 +340,13 @@ class SovereignToolRegistry:
             if not slides:
                 return ToolResult(tool_name="generate_powerpoint_presentation", success=False, output="", error="No slides provided.")
             title = args.get("title", "Executive Presentation")
+            subtitle = args.get("subtitle", "Industrial Evaluation")
             safe_title = _sanitize_filename_component(title, fallback="presentation")
             filename = f"{safe_title}_{uuid.uuid4().hex[:8]}.pptx"
             spec_info = {"tool_name": "generate_powerpoint_presentation", "arguments": args, "title": title, "type": "pptx"}
             deliv = {
                 "type": "presentation", "file_type": "pptx", "filename": filename, "title": f"{title} (.pptx)",
+                "subtitle": subtitle,
                 "path": f"/api/artifacts/{filename}", "download_url": f"/api/documents/download/{filename}",
                 "format": "PowerPoint Deck (.pptx)", "slides": slides, "size_bytes": 0,
             }
@@ -384,7 +401,16 @@ class SovereignToolRegistry:
         self.register("generate_word_document", _stage_docx,
             ToolDefinition(name="generate_word_document", description="Synthesize formal technical notes in Word (.docx).", parameters={"title": "string", "sections": "list"}))
         self.register("generate_powerpoint_presentation", _stage_pptx,
-            ToolDefinition(name="generate_powerpoint_presentation", description="Generate professional slide decks (.pptx).", parameters={"title": "string", "slides": "list"}))
+            ToolDefinition(
+                name="generate_powerpoint_presentation",
+                description="Generate professional, comprehensive slide decks (.pptx). Each slide must include clear definitions, in-depth technical explanations, and detailed points with bold headings, not just brief bullet points.",
+                parameters={
+                    "title": "string (Deck title)",
+                    "subtitle": "string (optional Deck subtitle)",
+                    "slides": "list of slide objects: [{title: string, subtitle?: string, definition?: string (statutory or technical definition), explanation?: string (detailed analysis and narrative explanation), bullets: list of detailed points with bold lead-ins, notes?: string (speaker notes)}]"
+                }
+            )
+        )
         self.register("generate_excel_spreadsheet", _stage_xlsx,
             ToolDefinition(name="generate_excel_spreadsheet", description="Generate auditable engineering calculation sheets (.xlsx).", parameters={"title": "string", "headers": "list", "rows": "list"}))
         self.register("inspect_visual_attachment", _inspect_vision,
